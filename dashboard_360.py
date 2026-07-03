@@ -1900,9 +1900,13 @@ def render_tabla_dimension_objetivos(
     dimension: str,
     total_colab: int,
     promedio: float,
+    altura_max: int | None = None,
 ) -> None:
     st.markdown(f"**{titulo}**")
-    html = '<div style="overflow-x:auto"><table class="ev-table">'
+    estilo = "overflow-x:auto"
+    if altura_max is not None:
+        estilo += f";max-height:{altura_max}px;overflow-y:auto"
+    html = f'<div style="{estilo}"><table class="ev-table">'
     html += (
         f"<thead><tr><th>{titulo}</th><th style='text-align:right'>Promedio de Objetivos</th>"
         "<th style='text-align:right'>Colaboradores</th><th style='text-align:right'>Participación</th></tr></thead><tbody>"
@@ -2278,6 +2282,7 @@ def render_resultado_integrado_tipo(
                 dim,
                 total,
                 promedio,
+                altura_max=360 if dim == "cargo_objetivo" else None,
             )
             st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
 
@@ -2382,19 +2387,6 @@ st.markdown(f"""
     <span class="ev-cycle">Fase I - Evaluaci\u00f3n 360 - {ciclo_limpio}</span>
 </div>
 """, unsafe_allow_html=True)
-
-if resumen_fuente:
-    etiqueta_fuente_resumen = (
-        "Neon PostgreSQL"
-        if fuente_datos.get("tipo") == "neon"
-        else "exportacion original de Evaluar.com"
-    )
-    st.caption(
-        f"Fuente: {etiqueta_fuente_resumen} - "
-        f"{resumen_fuente['filas']} respuestas - "
-        f"{resumen_fuente['colaboradores']} colaboradores - "
-        f"{resumen_fuente['items']} items"
-    )
 
 FASES = [
     ("fase1", "Fase I - Evaluaci\u00f3n 360"),
