@@ -1,0 +1,9 @@
+pandas
+numpy
+openpyxl
+streamlit
+plotly
+matplotlib
+reportlab
+SQLAlchemy
+psycopg[binary]

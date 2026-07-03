@@ -1,0 +1,44 @@
+# Streamlit secrets: keep only the example template in Git
+.streamlit/secrets.toml
+
+# Data files and local database exports
+*.xlsx
+*.xls
+*.csv
+*.tsv
+*.db
+*.sqlite
+*.sqlite3
+*.parquet
+*.pdf
+
+# Local input/output artifacts
+reporte/datos/
+reporte/output/
+ejemplos/
+
+# Exploratory/heavy reference artifacts
+analisis_desempeño.ipynb
+modelos html/
+
+# Temporary Excel lock files
+~$*
+
+# Python cache and local environments
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+
+# Local OS/editor noise
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Local Codex/agent state
+.agents/
+.codex/
