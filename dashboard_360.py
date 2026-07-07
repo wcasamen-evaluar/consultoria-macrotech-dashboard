@@ -19,7 +19,6 @@ from collections.abc import Mapping
 from pathlib import Path
 
 import streamlit as st
-import streamlit.components.v1 as components
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
@@ -280,48 +279,45 @@ html, body, [class*="css"] {
     margin: 2px;
 }
 
-/* Filtros y pestaÃ±as se fijan solo despuÃ©s de alcanzar el borde superior */
+/* Navegacion y filtros fijos sin depender del DOM interno de Streamlit */
+.st-key-sticky_phase_nav {
+    position: sticky;
+    top: 0;
+    z-index: 1003;
+    background: white;
+    padding-top: 4px;
+    padding-bottom: 8px;
+    box-shadow: 0 8px 12px -14px rgba(26, 26, 62, 0.28);
+}
 .st-key-sticky_filtros_desempeno,
 .st-key-sticky_filtros_potencial {
+    position: sticky;
+    top: 58px;
+    z-index: 1002;
     background: white;
     padding-top: 4px;
     padding-bottom: 6px;
-}
-body.phase-controls-pinned .st-key-sticky_filtros_desempeno,
-body.phase-controls-pinned .st-key-sticky_filtros_potencial {
-    position: fixed;
-    top: 0;
-    left: 21.5rem;
-    right: 4.5rem;
-    z-index: 1000;
-    background: white;
     box-shadow: 0 8px 12px -12px rgba(26, 26, 62, 0.35);
 }
-body.phase-controls-pinned [data-testid="stTabs"] [data-baseweb="tab-list"] {
-    position: fixed;
-    top: var(--phase-filter-height, 7.35rem);
-    left: 21.5rem;
-    right: 4.5rem;
-    z-index: 999;
+.st-key-sticky_fase1_subnav {
+    position: sticky;
+    top: 148px;
+    z-index: 1001;
     background: white;
-    padding-top: 4px;
+    padding-top: 6px;
+    padding-bottom: 8px;
     box-shadow: 0 8px 12px -12px rgba(26, 26, 62, 0.28);
 }
 .sticky-controls-spacer {
-    height: 0;
-}
-body.phase-controls-pinned .sticky-controls-spacer {
-    height: calc(var(--phase-filter-height, 7.35rem) + 3rem);
+    height: 6px;
 }
 @media (max-width: 768px) {
-    body.phase-controls-pinned .st-key-sticky_filtros_desempeno,
-    body.phase-controls-pinned .st-key-sticky_filtros_potencial,
-    body.phase-controls-pinned [data-testid="stTabs"] [data-baseweb="tab-list"] {
-        left: 1rem;
-        right: 1rem;
+    .st-key-sticky_filtros_desempeno,
+    .st-key-sticky_filtros_potencial {
+        top: 70px;
     }
-    body.phase-controls-pinned [data-testid="stTabs"] [data-baseweb="tab-list"] {
-        overflow-x: auto;
+    .st-key-sticky_fase1_subnav {
+        top: 170px;
     }
 }
 
@@ -1493,14 +1489,26 @@ def cargar_datos_dashboard() -> tuple[dict, dict, dict, dict]:
             "detalle": "Desempeño - Potencial",
         }
 
-    database_url = data_db.resolver_database_url(st.secrets)
-    schema = str(leer_config_app("DB_SCHEMA", "public"))
-    res_db, potencial_db, objetivos_db = cargar_base_neon(database_url, schema, VERSION_CARGA_DB)
-    return res_db, potencial_db, objetivos_db, {
-        "tipo": "neon",
-        "nombre": "Neon PostgreSQL",
-        "detalle": f"schema: {schema}",
-    }
+    try:
+        database_url = data_db.resolver_database_url(st.secrets)
+        schema = str(leer_config_app("DB_SCHEMA", "public"))
+        res_db, potencial_db, objetivos_db = cargar_base_neon(database_url, schema, VERSION_CARGA_DB)
+        return res_db, potencial_db, objetivos_db, {
+            "tipo": "neon",
+            "nombre": "Neon PostgreSQL",
+            "detalle": f"schema: {schema}",
+        }
+    except ModuleNotFoundError as exc:
+        if exc.name == "psycopg" and ARCHIVO_BASE.exists():
+            res_local, potencial_local, objetivos_local = cargar_base_excel(
+                str(ARCHIVO_BASE), ARCHIVO_BASE.stat().st_mtime_ns, VERSION_CARGA_BASE
+            )
+            return res_local, potencial_local, objetivos_local, {
+                "tipo": "excel",
+                "nombre": ARCHIVO_BASE.name,
+                "detalle": "Excel local (fallback: falta psycopg)",
+            }
+        raise
 
 
 # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -2396,22 +2404,33 @@ FASES = [
     ("ninebox", "Ninebox"),
 ]
 
+
+def render_nav_botones(opciones: list[tuple[str, str]], estado_key: str, prefijo_key: str) -> str:
+    """Navegacion estable basada en botones, sin depender de tabs internas."""
+    claves_validas = {key for key, _ in opciones}
+    if estado_key not in st.session_state or st.session_state[estado_key] not in claves_validas:
+        st.session_state[estado_key] = opciones[0][0]
+
+    cols = st.columns(len(opciones))
+    for col, (key, label) in zip(cols, opciones):
+        with col:
+            activa = st.session_state[estado_key] == key
+            if st.button(
+                label,
+                key=f"{prefijo_key}_{key}",
+                use_container_width=True,
+                type="primary" if activa else "secondary",
+            ):
+                st.session_state[estado_key] = key
+                st.rerun()
+    return st.session_state[estado_key]
+
+
 if "fase_activa" not in st.session_state:
     st.session_state.fase_activa = "fase1"
 
 with st.container(key="sticky_phase_nav"):
-    cols = st.columns(len(FASES))
-    for col, (key, label) in zip(cols, FASES):
-        with col:
-            activa = st.session_state.fase_activa == key
-            if st.button(
-                label,
-                key=f"nav_{key}",
-                use_container_width=True,
-                type="primary" if activa else "secondary",
-            ):
-                st.session_state.fase_activa = key
-                st.rerun()
+    render_nav_botones(FASES, "fase_activa", "nav")
 
 fase_activa = st.session_state.fase_activa
 st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
@@ -2529,17 +2548,20 @@ if fase_activa == "fase1":
 
     st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
 
-    # Subtabs de Fase I
-    sub_res, sub_comp, sub_rel, sub_colab, sub_items = st.tabs([
-        "Resumen",
-        "Competencias",
-        "Por relaci\u00f3n",
-        "Colaboradores",
-        "\u00cdtems",
-    ])
+    # Subnavegacion de Fase I. Usamos botones para evitar inconsistencias de
+    # st.tabs en Streamlit Cloud cuando cambian filtros y se preserva el scroll.
+    FASE1_TABS = [
+        ("resumen", "Resumen"),
+        ("competencias", "Competencias"),
+        ("relacion", "Por relaci\u00f3n"),
+        ("colaboradores", "Colaboradores"),
+        ("items", "\u00cdtems"),
+    ]
+    with st.container(key="sticky_fase1_subnav"):
+        fase1_tab = render_nav_botones(FASE1_TABS, "fase1_tab", "fase1_tab")
 
     # â”€â”€ Subtab: Resumen â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    with sub_res:
+    if fase1_tab == "resumen":
         col_a, col_b = st.columns(2)
         with col_a:
             st.markdown("**Distribución por escala de desempeño**")
@@ -2582,7 +2604,7 @@ if fase_activa == "fase1":
                 </div>""", unsafe_allow_html=True)
 
     # â”€â”€ Subtab: Competencias â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    with sub_comp:
+    if fase1_tab == "competencias":
         col_a, col_b = st.columns(2)
         with col_a:
             st.markdown("**Puntaje por competencia**")
@@ -2608,7 +2630,7 @@ if fase_activa == "fase1":
         st.markdown(html, unsafe_allow_html=True)
 
     # â”€â”€ Subtab: Por relaciÃ³n â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    with sub_rel:
+    if fase1_tab == "relacion":
         col_a, col_b = st.columns(2)
         competencias_f = df_comp_prom_f["competencia"].tolist()
         with col_a:
@@ -2636,7 +2658,7 @@ if fase_activa == "fase1":
         st.markdown(html, unsafe_allow_html=True)
 
     # â”€â”€ Subtab: Colaboradores â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    with sub_colab:
+    if fase1_tab == "colaboradores":
         opciones_colab = df_global_f.sort_values("global", ascending=False)["colaborador"].tolist()
         if opciones_colab:
             control_colab, control_top = st.columns([3, 1])
@@ -2735,7 +2757,7 @@ if fase_activa == "fase1":
             st.info("No hay colaboradores con los filtros aplicados.")
 
     # â”€â”€ Subtab: Ãtems â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    with sub_items:
+    if fase1_tab == "items":
         st.markdown("**Puntaje por \u00edtem (promedio ponderado)**")
         comp_options = ["Todas las competencias"] + sorted(df_items_f["competencia"].unique().tolist())
         filtro_comp  = st.selectbox("Competencia", comp_options, label_visibility="collapsed")
@@ -3600,79 +3622,3 @@ if fase_activa == "ninebox":
                 html += "</tbody></table></div>"
                 st.markdown(html, unsafe_allow_html=True)
 
-
-
-# Activa el modo fijo solo cuando filtros y pestaÃ±as alcanzan el borde superior.
-components.html(
-    """
-    <script>
-    (() => {
-        const hostWindow = window.parent;
-        const doc = hostWindow.document;
-
-        if (hostWindow.__phaseControlsCleanup) {
-            hostWindow.__phaseControlsCleanup();
-        }
-
-        const setup = () => {
-            const filter = doc.querySelector(
-                '.st-key-sticky_filtros_desempeno, .st-key-sticky_filtros_potencial'
-            );
-            const tabs = doc.querySelector(
-                '[data-testid="stTabs"] [data-baseweb="tab-list"]'
-            );
-
-            if (!filter || !tabs) {
-                doc.body.classList.remove('phase-controls-pinned');
-                doc.body.style.removeProperty('--phase-filter-height');
-                return;
-            }
-
-            let scroller = filter.parentElement;
-            while (scroller && scroller !== doc.body) {
-                const style = hostWindow.getComputedStyle(scroller);
-                const scrollable = /(auto|scroll)/.test(style.overflowY)
-                    && scroller.scrollHeight > scroller.clientHeight;
-                if (scrollable) break;
-                scroller = scroller.parentElement;
-            }
-
-            const usesWindow = !scroller || scroller === doc.body;
-            const target = usesWindow ? hostWindow : scroller;
-            const getScrollTop = () => usesWindow
-                ? (hostWindow.scrollY || doc.documentElement.scrollTop)
-                : scroller.scrollTop;
-            const getViewportTop = () => usesWindow ? 0 : scroller.getBoundingClientRect().top;
-            const trigger = filter.getBoundingClientRect().top
-                - getViewportTop() + getScrollTop();
-
-            const update = () => {
-                const pinned = getScrollTop() >= trigger - 2;
-                doc.body.classList.toggle('phase-controls-pinned', pinned);
-                if (pinned) {
-                    doc.body.style.setProperty(
-                        '--phase-filter-height', `${filter.offsetHeight}px`
-                    );
-                }
-            };
-
-            target.addEventListener('scroll', update, { passive: true });
-            hostWindow.addEventListener('resize', update, { passive: true });
-            update();
-
-            hostWindow.__phaseControlsCleanup = () => {
-                target.removeEventListener('scroll', update);
-                hostWindow.removeEventListener('resize', update);
-                doc.body.classList.remove('phase-controls-pinned');
-                doc.body.style.removeProperty('--phase-filter-height');
-                hostWindow.__phaseControlsCleanup = null;
-            };
-        };
-
-        hostWindow.setTimeout(setup, 250);
-    })();
-    </script>
-    """,
-    height=0,
-    width=0,
-)
