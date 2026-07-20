@@ -490,28 +490,15 @@ def formato_peso(peso: float) -> str:
 
 
 def etiquetas_tipo_con_pesos(df_comp: pd.DataFrame, tipos: list[str]) -> dict:
-    pesos_por_tipo = {tipo: [] for tipo in tipos}
-    for _, fila in df_comp.iterrows():
-        presentes = [tipo for tipo in tipos if pd.notna(fila.get(f"tipo_{tipo}"))]
-        if not presentes:
-            continue
-        pesos = motor_360.calcular_pesos_redistribuidos(presentes, PESOS_PONDERACION)
-        for tipo, peso in pesos.items():
-            pesos_por_tipo.setdefault(tipo, []).append(float(peso))
-
-    etiquetas = {}
-    for tipo in tipos:
-        valores = pesos_por_tipo.get(tipo, [])
-        if not valores:
-            etiquetas[tipo] = TIPO_LABEL.get(tipo, tipo)
-            continue
-        minimo, maximo = min(valores), max(valores)
-        if abs(minimo - maximo) < 0.0001:
-            peso_txt = formato_peso(minimo)
-        else:
-            peso_txt = f"{formato_peso(minimo)}-{formato_peso(maximo)}"
-        etiquetas[tipo] = f"{TIPO_LABEL.get(tipo, tipo)} ({peso_txt})"
-    return etiquetas
+    del df_comp
+    return {
+        tipo: (
+            f"{TIPO_LABEL.get(tipo, tipo)} ({formato_peso(PESOS_PONDERACION[tipo])})"
+            if tipo in PESOS_PONDERACION
+            else TIPO_LABEL.get(tipo, tipo)
+        )
+        for tipo in tipos
+    }
 
 
 def escala_label(v: float) -> str:
@@ -691,33 +678,85 @@ def fig_medidor_potencial(valor: float, limites: tuple[float, float]) -> go.Figu
     """Medidor del promedio filtrado con bandas de la escala indicada."""
     limite_bajo, limite_alto = limites
     valor_grafico = float(valor) if pd.notna(valor) else 0.0
-    fig = go.Figure(go.Indicator(
-        mode="gauge+number",
-        value=valor_grafico,
-        number={"valueformat": ".2f", "font": {"size": 22, "color": "#1a1a3e"}},
-        gauge={
-            "axis": {"range": [0, 100], "visible": False},
-            "bar": {"color": "rgba(0,0,0,0)"},
-            "bgcolor": "white",
-            "borderwidth": 0,
-            "steps": [
-                {"range": [0, limite_bajo], "color": "#d94a45"},
-                {"range": [limite_bajo, limite_alto], "color": "#f0c419"},
-                {"range": [limite_alto, 100], "color": "#36a65c"},
-            ],
-            "threshold": {
-                "line": {"color": "#1a1a3e", "width": 4},
-                "thickness": 0.8,
-                "value": valor_grafico,
-            },
-        },
-        domain={"x": [0.06, 0.94], "y": [0.05, 1]},
+    valor_aguja = min(100.0, max(0.0, valor_grafico))
+    fig = go.Figure()
+
+    def punto(angulo: float, radio: float) -> tuple[float, float]:
+        return radio * np.cos(angulo), radio * np.sin(angulo)
+
+    def agregar_segmento(inicio: float, fin: float, color: str) -> None:
+        ang_inicio = np.pi - (inicio / 100.0) * np.pi
+        ang_fin = np.pi - (fin / 100.0) * np.pi
+        radio_ext, radio_int = 1.0, 0.68
+        theta_ext = np.linspace(ang_inicio, ang_fin, 90)
+        theta_int = np.linspace(ang_fin, ang_inicio, 90)
+        x_ext = radio_ext * np.cos(theta_ext)
+        y_ext = radio_ext * np.sin(theta_ext)
+        x_int = radio_int * np.cos(theta_int)
+        y_int = radio_int * np.sin(theta_int)
+        fig.add_trace(go.Scatter(
+            x=np.concatenate([x_ext, x_int]),
+            y=np.concatenate([y_ext, y_int]),
+            mode="lines",
+            fill="toself",
+            fillcolor=color,
+            line=dict(color=color, width=0),
+            hoverinfo="skip",
+            showlegend=False,
+        ))
+
+    for inicio, fin, color in [
+        (0, limite_bajo, "#d94a45"),
+        (limite_bajo, limite_alto, "#f0c419"),
+        (limite_alto, 100, "#36a65c"),
+    ]:
+        agregar_segmento(inicio, fin, color)
+
+    angulo_aguja = np.pi - (valor_aguja / 100.0) * np.pi
+    punta_x, punta_y = punto(angulo_aguja, 0.86)
+    fig.add_shape(
+        type="line",
+        xref="x",
+        yref="y",
+        x0=0,
+        y0=0,
+        x1=punta_x,
+        y1=punta_y,
+        line=dict(color="#1a1a3e", width=3),
+        layer="above",
+    )
+
+    fig.add_annotation(
+        x=0,
+        y=-0.11,
+        text=f"{valor_grafico:.2f}",
+        showarrow=False,
+        font=dict(size=22, color="#1a1a3e", family="DM Sans"),
+        xanchor="center",
+        yanchor="middle",
+    )
+    fig.add_trace(go.Scatter(
+        x=[-1.05, 1.05],
+        y=[-0.22, 1.06],
+        mode="markers",
+        marker=dict(size=0, color="rgba(0,0,0,0)"),
+        hoverinfo="skip",
+        showlegend=False,
     ))
     fig.update_layout(
         height=210,
         margin=dict(l=12, r=12, t=8, b=8),
         paper_bgcolor="white",
+        plot_bgcolor="white",
         font_family="DM Sans",
+        xaxis=dict(visible=False, range=[-1.18, 1.18], fixedrange=True),
+        yaxis=dict(
+            visible=False,
+            range=[-0.22, 1.18],
+            scaleanchor="x",
+            scaleratio=1,
+            fixedrange=True,
+        ),
     )
     return fig
 
@@ -733,34 +772,45 @@ def fig_escala_potencial(df: pd.DataFrame, columna: str) -> go.Figure:
         .map(mapa_escala)
     )
     conteos = valores.value_counts().reindex(POTENCIAL_ESCALAS, fill_value=0)
+    y_max = max(5, int(np.ceil(conteos.max() * 1.18))) if len(conteos) else 5
+    layout = PLOTLY_LAYOUT.copy()
+    layout["margin"] = dict(l=42, r=24, t=34, b=48)
     fig = go.Figure(go.Bar(
         x=POTENCIAL_ESCALAS,
         y=conteos.values,
         marker_color=[POTENCIAL_COLORES[escala] for escala in POTENCIAL_ESCALAS],
         text=conteos.values,
         textposition="outside",
+        cliponaxis=False,
         hovertemplate="%{x}<br>%{y} colaboradores<extra></extra>",
     ))
     fig.update_layout(
-        **PLOTLY_LAYOUT,
+        **layout,
         height=280,
         showlegend=False,
         xaxis=dict(tickfont_size=11),
-        yaxis=dict(title="Colaboradores", gridcolor="#f0eef8", rangemode="tozero"),
+        yaxis=dict(
+            title="Colaboradores",
+            gridcolor="#f0eef8",
+            range=[0, y_max],
+            rangemode="tozero",
+        ),
     )
     return fig
 
 
 def fig_distribucion_potencial(df: pd.DataFrame, dimension: str) -> go.Figure:
-    conteos = (
+    serie = (
         df[dimension]
         .fillna("Sin dato")
         .replace("", "Sin dato")
-        .value_counts()
+        .map(reparar_texto)
     )
+    conteos = serie.value_counts()
     etiquetas_cortas = {
         "Macrotech Farmaceutica": "Macrotech",
-        "RepÃºblica Dominicana": "R. Dominicana",
+        "Macrotech Farmacéutica": "Macrotech",
+        "República Dominicana": "R. Dominicana",
     }
     etiquetas = [etiquetas_cortas.get(str(valor), str(valor)) for valor in conteos.index]
     paleta = ["#3f7ee8", "#1d9e75", "#e6a700", "#d95f59", "#7c5cc4"]
@@ -773,10 +823,10 @@ def fig_distribucion_potencial(df: pd.DataFrame, dimension: str) -> go.Figure:
         domain=dict(x=[0.08, 0.92], y=[0.08, 0.92]),
         marker=dict(colors=paleta[:len(conteos)], line=dict(color="white", width=2)),
         textposition="outside",
-        texttemplate="%{label}<br>%{value} Â· %{percent}",
+        texttemplate="%{label}<br>%{value} - %{percent}",
         textfont=dict(size=9),
         automargin=True,
-        customdata=conteos.index,
+        customdata=[str(valor) for valor in conteos.index],
         hovertemplate="%{customdata}<br>%{value} colaboradores<br>%{percent}<extra></extra>",
     ))
     layout_dona = {**PLOTLY_LAYOUT, "margin": dict(l=42, r=42, t=34, b=34)}
@@ -954,6 +1004,7 @@ def contar_iq(df: pd.DataFrame) -> pd.DataFrame:
         .str.strip()
         .replace("", np.nan)
         .dropna()
+        .map(reparar_texto)
     )
     conteos = valores.value_counts()
     total = int(conteos.sum())
@@ -973,7 +1024,7 @@ def fig_iq_distribucion(df_iq: pd.DataFrame) -> go.Figure:
         x=datos["colaboradores"],
         orientation="h",
         marker=dict(color=colores, line=dict(color="white", width=1)),
-        text=datos["colaboradores"].astype(str) + " Â· " + datos["participacion"].map(lambda v: f"{v:.1%}"),
+        text=datos["colaboradores"].astype(str) + " - " + datos["participacion"].map(lambda v: f"{v:.1%}"),
         textposition="outside",
         cliponaxis=False,
         customdata=np.stack([datos["puntaje"], datos["participacion"]], axis=-1),
@@ -1516,14 +1567,36 @@ def cargar_datos_dashboard() -> tuple[dict, dict, dict, dict]:
 # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 def fig_escala(df_global: pd.DataFrame) -> go.Figure:
     counts = [len(df_global[df_global["escala_idx"] == i]) for i in range(4)]
+    max_count = max(counts) if counts else 0
+    x_max = max(5, int(np.ceil(max_count * 1.12)))
+    layout = PLOTLY_LAYOUT.copy()
+    layout["margin"] = dict(l=170, r=48, t=18, b=36)
     fig = go.Figure(go.Bar(
-        x=ESCALA_LABELS, y=counts,
+        x=counts,
+        y=ESCALA_LABELS,
+        orientation="h",
         marker_color=ESCALA_COLORES,
-        text=counts, textposition="outside",
+        text=counts,
+        textposition="outside",
+        cliponaxis=False,
+        hovertemplate="%{y}<br>%{x} colaboradores<extra></extra>",
     ))
-    fig.update_layout(**PLOTLY_LAYOUT, height=260,
-                      xaxis=dict(tickfont_size=11),
-                      yaxis=dict(title="Colaboradores", gridcolor="#f0eef8"))
+    fig.update_layout(
+        **layout,
+        height=260,
+        xaxis=dict(
+            title="Colaboradores",
+            range=[0, x_max],
+            gridcolor="#f0eef8",
+            rangemode="tozero",
+        ),
+        yaxis=dict(
+            title="",
+            autorange="reversed",
+            tickfont_size=12,
+        ),
+        showlegend=False,
+    )
     return fig
 
 
@@ -1771,6 +1844,29 @@ def fig_objetivos_bullet(promedio: float) -> go.Figure:
         margin=dict(l=18, r=18, t=30, b=12),
         paper_bgcolor="white",
         font_family="DM Sans",
+    )
+    fig.add_shape(
+        type="line",
+        xref="paper",
+        yref="paper",
+        x0=centro_x,
+        y0=centro_y,
+        x1=punta_x,
+        y1=punta_y,
+        line=dict(color="#1a1a3e", width=3),
+        layer="above",
+    )
+    fig.add_shape(
+        type="circle",
+        xref="paper",
+        yref="paper",
+        x0=centro_x - 0.012,
+        y0=centro_y - 0.012,
+        x1=centro_x + 0.012,
+        y1=centro_y + 0.012,
+        fillcolor="#1a1a3e",
+        line=dict(color="#1a1a3e", width=0),
+        layer="above",
     )
     return fig
 
@@ -2911,7 +3007,7 @@ if fase_activa == "fase2":
                     key="potencial_escala_propia",
                 )
 
-            graf_1, graf_2, graf_3 = st.columns(3)
+            graf_1, graf_2 = st.columns(2)
             with graf_1:
                 st.markdown("**Colaboradores por empresa**")
                 st.plotly_chart(
@@ -2925,13 +3021,6 @@ if fase_activa == "fase2":
                     fig_distribucion_potencial(df_potencial, "pais"),
                     use_container_width=True,
                     key="potencial_pais",
-                )
-            with graf_3:
-                st.markdown("**Comparativo de potencial 2025-2026**")
-                st.plotly_chart(
-                    fig_comparativo_potencial(df_potencial),
-                    use_container_width=True,
-                    key="potencial_comparativo",
                 )
     with sub_f2_pot:
         escala_valores = st.segmented_control(
