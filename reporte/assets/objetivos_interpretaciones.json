@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "description": "Interpretaciones para la puntuación general de Objetivos. Usa los mismos cortes del dashboard: >=90, >=80, >=70 y <70.",
+  "description_text": "Proceso orientado a revisar el nivel de cumplimiento de las responsabilidades y metas definidas para cada colaborador, conectando los resultados individuales con las prioridades del cargo y de la organización.",
+  "ranges": [
+    {
+      "key": "alto_desempeno",
+      "label": "Alto cumplimiento",
+      "from": 90,
+      "to": 101,
+      "title": "Cumplimiento destacado",
+      "interpretation": "Cumple o supera las metas establecidas. Sus resultados muestran un nivel sobresaliente de ejecución, foco y responsabilidad frente a los compromisos definidos para el período."
+    },
+    {
+      "key": "satisfactorio",
+      "label": "Cumplimiento satisfactorio",
+      "from": 80,
+      "to": 90,
+      "title": "Buen avance",
+      "interpretation": "Presenta un cumplimiento adecuado de los objetivos. Se observan resultados sólidos, con oportunidades puntuales para fortalecer seguimiento, consistencia y cierre de compromisos."
+    },
+    {
+      "key": "bajo_desempeno",
+      "label": "Cumplimiento emergente",
+      "from": 70,
+      "to": 80,
+      "title": "Requiere impulso",
+      "interpretation": "Avanza en el cumplimiento de sus objetivos, aunque aún existen brechas relevantes. Es recomendable priorizar metas críticas, acordar acciones concretas y revisar avances con mayor frecuencia."
+    },
+    {
+      "key": "insatisfactorio",
+      "label": "Bajo cumplimiento",
+      "from": 0,
+      "to": 70,
+      "title": "Atención prioritaria",
+      "interpretation": "El cumplimiento se encuentra por debajo de lo esperado. Se requiere un plan de acción inmediato, con metas claras, acompañamiento cercano y seguimiento sistemático."
+    }
+  ]
+}

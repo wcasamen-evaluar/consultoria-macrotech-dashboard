@@ -1,0 +1,585 @@
+{
+  "fuente": "Fase_I_Evaluación_360__180__90__copia_.xlsx",
+  "competencias": [
+    {
+      "competencia": "Administración de procesos",
+      "orden": 38,
+      "descripcion": "Competencia evaluada en la matriz de potencial.",
+      "personas": 6,
+      "valor_promedio": 5.24,
+      "esperado_promedio": 6.0,
+      "brecha_promedio": -0.95,
+      "ajuste_promedio": 0.9
+    },
+    {
+      "competencia": "Administración del tiempo",
+      "orden": 25,
+      "descripcion": "Competencia evaluada en la matriz de potencial.",
+      "personas": 1,
+      "valor_promedio": 5.94,
+      "esperado_promedio": 6.0,
+      "brecha_promedio": -0.06,
+      "ajuste_promedio": 0.99
+    },
+    {
+      "competencia": "Agresividad comercial (tipo cazador)",
+      "orden": 31,
+      "descripcion": "Competencia evaluada en la matriz de potencial.",
+      "personas": 2,
+      "valor_promedio": 6.36,
+      "esperado_promedio": 6.5,
+      "brecha_promedio": -0.2,
+      "ajuste_promedio": 0.98
+    },
+    {
+      "competencia": "Alta Energía y dinamismo",
+      "orden": 46,
+      "descripcion": "Competencia evaluada en la matriz de potencial.",
+      "personas": 10,
+      "valor_promedio": 6.85,
+      "esperado_promedio": 4.0,
+      "brecha_promedio": 0.0,
+      "ajuste_promedio": 1.0
+    },
+    {
+      "competencia": "Asertividad",
+      "orden": 55,
+      "descripcion": "Competencia evaluada en la matriz de potencial.",
+      "personas": 1,
+      "valor_promedio": 4.38,
+      "esperado_promedio": 6.0,
+      "brecha_promedio": -1.62,
+      "ajuste_promedio": 0.84
+    },
+    {
+      "competencia": "Autocontrol",
+      "orden": 56,
+      "descripcion": "Competencia evaluada en la matriz de potencial.",
+      "personas": 2,
+      "valor_promedio": 3.71,
+      "esperado_promedio": 6.5,
+      "brecha_promedio": -2.79,
+      "ajuste_promedio": 0.72
+    },
+    {
+      "competencia": "Búsqueda de datos e información",
+      "orden": 39,
+      "descripcion": "Competencia evaluada en la matriz de potencial.",
+      "personas": 6,
+      "valor_promedio": 4.93,
+      "esperado_promedio": 5.83,
+      "brecha_promedio": -1.07,
+      "ajuste_promedio": 0.89
+    },
+    {
+      "competencia": "Calidad del trabajo",
+      "orden": 1,
+      "descripcion": "Competencia evaluada en la matriz de potencial.",
+      "personas": 142,
+      "valor_promedio": 4.82,
+      "esperado_promedio": 4.9,
+      "brecha_promedio": -0.74,
+      "ajuste_promedio": 0.93
+    },
+    {
+      "competencia": "Capacidad de Gestión",
+      "orden": 20,
+      "descripcion": "Competencia evaluada en la matriz de potencial.",
+      "personas": 11,
+      "valor_promedio": 4.5,
+      "esperado_promedio": 5.73,
+      "brecha_promedio": -1.43,
+      "ajuste_promedio": 0.86
+    },
+    {
+      "competencia": "Capacidad de planificación",
+      "orden": 6,
+      "descripcion": "Competencia evaluada en la matriz de potencial.",
+      "personas": 310,
+      "valor_promedio": 4.38,
+      "esperado_promedio": 5.32,
+      "brecha_promedio": -1.13,
+      "ajuste_promedio": 0.89
+    },
+    {
+      "competencia": "Colaboración",
+      "orden": 14,
+      "descripcion": "Competencia evaluada en la matriz de potencial.",
+      "personas": 8,
+      "valor_promedio": 4.32,
+      "esperado_promedio": 4.0,
+      "brecha_promedio": -0.45,
+      "ajuste_promedio": 0.95
+    },
+    {
+      "competencia": "Comunicación efectiva",
+      "orden": 10,
+      "descripcion": "Competencia evaluada en la matriz de potencial.",
+      "personas": 48,
+      "valor_promedio": 5.27,
+      "esperado_promedio": 5.62,
+      "brecha_promedio": -0.65,
+      "ajuste_promedio": 0.93
+    },
+    {
+      "competencia": "Construcción del conocimiento en equipo",
+      "orden": 47,
+      "descripcion": "Competencia evaluada en la matriz de potencial.",
+      "personas": 4,
+      "valor_promedio": 5.77,
+      "esperado_promedio": 6.25,
+      "brecha_promedio": -0.61,
+      "ajuste_promedio": 0.94
+    },
+    {
+      "competencia": "Creatividad",
+      "orden": 48,
+      "descripcion": "Competencia evaluada en la matriz de potencial.",
+      "personas": 2,
+      "valor_promedio": 3.67,
+      "esperado_promedio": 6.0,
+      "brecha_promedio": -2.33,
+      "ajuste_promedio": 0.77
+    },
+    {
+      "competencia": "Credibilidad técnica",
+      "orden": 7,
+      "descripcion": "Competencia evaluada en la matriz de potencial.",
+      "personas": 195,
+      "valor_promedio": 5.06,
+      "esperado_promedio": 5.79,
+      "brecha_promedio": -0.96,
+      "ajuste_promedio": 0.9
+    },
+    {
+      "competencia": "Cultura Digital (Habilidad Digital)",
+      "orden": 43,
+      "descripcion": "Competencia evaluada en la matriz de potencial.",
+      "personas": 1,
+      "valor_promedio": 6.5,
+      "esperado_promedio": 6.0,
+      "brecha_promedio": 0.0,
+      "ajuste_promedio": 1.0
+    },
+    {
+      "competencia": "Cumplimiento de Normas (Compliance)",
+      "orden": 44,
+      "descripcion": "Competencia evaluada en la matriz de potencial.",
+      "personas": 2,
+      "valor_promedio": 5.12,
+      "esperado_promedio": 5.0,
+      "brecha_promedio": -0.57,
+      "ajuste_promedio": 0.94
+    },
+    {
+      "competencia": "Desarrollo de equipo",
+      "orden": 50,
+      "descripcion": "Competencia evaluada en la matriz de potencial.",
+      "personas": 3,
+      "valor_promedio": 4.89,
+      "esperado_promedio": 7.67,
+      "brecha_promedio": -2.78,
+      "ajuste_promedio": 0.72
+    },
+    {
+      "competencia": "Desarrollo de personas",
+      "orden": 53,
+      "descripcion": "Competencia evaluada en la matriz de potencial.",
+      "personas": 1,
+      "valor_promedio": 4.69,
+      "esperado_promedio": 8.0,
+      "brecha_promedio": -3.31,
+      "ajuste_promedio": 0.67
+    },
+    {
+      "competencia": "Desarrollo de relaciones",
+      "orden": 15,
+      "descripcion": "Competencia evaluada en la matriz de potencial.",
+      "personas": 34,
+      "valor_promedio": 5.93,
+      "esperado_promedio": 6.41,
+      "brecha_promedio": -1.07,
+      "ajuste_promedio": 0.89
+    },
+    {
+      "competencia": "Didáctica",
+      "orden": 54,
+      "descripcion": "Competencia evaluada en la matriz de potencial.",
+      "personas": 1,
+      "valor_promedio": 4.77,
+      "esperado_promedio": 7.0,
+      "brecha_promedio": -2.23,
+      "ajuste_promedio": 0.78
+    },
+    {
+      "competencia": "Discernimiento y criterio",
+      "orden": 52,
+      "descripcion": "Competencia evaluada en la matriz de potencial.",
+      "personas": 1,
+      "valor_promedio": 7.08,
+      "esperado_promedio": 8.0,
+      "brecha_promedio": -0.92,
+      "ajuste_promedio": 0.91
+    },
+    {
+      "competencia": "Empatía",
+      "orden": 36,
+      "descripcion": "Competencia evaluada en la matriz de potencial.",
+      "personas": 3,
+      "valor_promedio": 6.33,
+      "esperado_promedio": 6.0,
+      "brecha_promedio": -0.26,
+      "ajuste_promedio": 0.97
+    },
+    {
+      "competencia": "Escrupulosidad/Minuciosidad",
+      "orden": 12,
+      "descripcion": "Competencia evaluada en la matriz de potencial.",
+      "personas": 48,
+      "valor_promedio": 4.73,
+      "esperado_promedio": 5.25,
+      "brecha_promedio": -0.91,
+      "ajuste_promedio": 0.91
+    },
+    {
+      "competencia": "Escucha activa",
+      "orden": 37,
+      "descripcion": "Competencia evaluada en la matriz de potencial.",
+      "personas": 9,
+      "valor_promedio": 5.71,
+      "esperado_promedio": 4.44,
+      "brecha_promedio": -0.08,
+      "ajuste_promedio": 0.99
+    },
+    {
+      "competencia": "Flexibilidad y Adaptabilidad",
+      "orden": 19,
+      "descripcion": "Competencia evaluada en la matriz de potencial.",
+      "personas": 35,
+      "valor_promedio": 4.6,
+      "esperado_promedio": 4.09,
+      "brecha_promedio": -0.18,
+      "ajuste_promedio": 0.98
+    },
+    {
+      "competencia": "Gestión de conflictos",
+      "orden": 49,
+      "descripcion": "Competencia evaluada en la matriz de potencial.",
+      "personas": 5,
+      "valor_promedio": 6.1,
+      "esperado_promedio": 6.0,
+      "brecha_promedio": -0.37,
+      "ajuste_promedio": 0.96
+    },
+    {
+      "competencia": "Gestión del riesgo",
+      "orden": 30,
+      "descripcion": "Competencia evaluada en la matriz de potencial.",
+      "personas": 1,
+      "valor_promedio": 4.83,
+      "esperado_promedio": 9.0,
+      "brecha_promedio": -4.17,
+      "ajuste_promedio": 0.58
+    },
+    {
+      "competencia": "Gestión del riesgo/seguridad",
+      "orden": 51,
+      "descripcion": "Competencia evaluada en la matriz de potencial.",
+      "personas": 1,
+      "valor_promedio": 5.46,
+      "esperado_promedio": 6.0,
+      "brecha_promedio": -0.54,
+      "ajuste_promedio": 0.95
+    },
+    {
+      "competencia": "Gestión operativa",
+      "orden": 34,
+      "descripcion": "Competencia evaluada en la matriz de potencial.",
+      "personas": 11,
+      "valor_promedio": 5.66,
+      "esperado_promedio": 6.64,
+      "brecha_promedio": -1.11,
+      "ajuste_promedio": 0.89
+    },
+    {
+      "competencia": "Habilidades de contacto",
+      "orden": 41,
+      "descripcion": "Competencia evaluada en la matriz de potencial.",
+      "personas": 8,
+      "valor_promedio": 5.53,
+      "esperado_promedio": 5.25,
+      "brecha_promedio": -0.66,
+      "ajuste_promedio": 0.93
+    },
+    {
+      "competencia": "Impacto e influencia",
+      "orden": 40,
+      "descripcion": "Competencia evaluada en la matriz de potencial.",
+      "personas": 24,
+      "valor_promedio": 4.66,
+      "esperado_promedio": 5.83,
+      "brecha_promedio": -1.24,
+      "ajuste_promedio": 0.88
+    },
+    {
+      "competencia": "Iniciativa",
+      "orden": 60,
+      "descripcion": "Competencia evaluada en la matriz de potencial.",
+      "personas": 1,
+      "valor_promedio": 3.71,
+      "esperado_promedio": 5.0,
+      "brecha_promedio": -1.29,
+      "ajuste_promedio": 0.87
+    },
+    {
+      "competencia": "Innovación",
+      "orden": 33,
+      "descripcion": "Competencia evaluada en la matriz de potencial.",
+      "personas": 11,
+      "valor_promedio": 5.06,
+      "esperado_promedio": 7.55,
+      "brecha_promedio": -2.49,
+      "ajuste_promedio": 0.75
+    },
+    {
+      "competencia": "Integridad",
+      "orden": 21,
+      "descripcion": "Competencia evaluada en la matriz de potencial.",
+      "personas": 50,
+      "valor_promedio": 4.76,
+      "esperado_promedio": 4.86,
+      "brecha_promedio": -0.6,
+      "ajuste_promedio": 0.94
+    },
+    {
+      "competencia": "Inteligencia Emocional",
+      "orden": 24,
+      "descripcion": "Competencia evaluada en la matriz de potencial.",
+      "personas": 18,
+      "valor_promedio": 5.36,
+      "esperado_promedio": 5.39,
+      "brecha_promedio": -0.49,
+      "ajuste_promedio": 0.95
+    },
+    {
+      "competencia": "Liderazgo FACILITADOR",
+      "orden": 23,
+      "descripcion": "Competencia evaluada en la matriz de potencial.",
+      "personas": 15,
+      "valor_promedio": 4.87,
+      "esperado_promedio": 7.87,
+      "brecha_promedio": -3.0,
+      "ajuste_promedio": 0.7
+    },
+    {
+      "competencia": "Liderazgo ORIENTATIVO",
+      "orden": 16,
+      "descripcion": "Competencia evaluada en la matriz de potencial.",
+      "personas": 74,
+      "valor_promedio": 4.85,
+      "esperado_promedio": 6.73,
+      "brecha_promedio": -1.94,
+      "ajuste_promedio": 0.81
+    },
+    {
+      "competencia": "Mejora continua",
+      "orden": 22,
+      "descripcion": "Competencia evaluada en la matriz de potencial.",
+      "personas": 41,
+      "valor_promedio": 4.23,
+      "esperado_promedio": 5.98,
+      "brecha_promedio": -1.79,
+      "ajuste_promedio": 0.82
+    },
+    {
+      "competencia": "Negociación efectiva",
+      "orden": 13,
+      "descripcion": "Competencia evaluada en la matriz de potencial.",
+      "personas": 29,
+      "valor_promedio": 5.21,
+      "esperado_promedio": 6.03,
+      "brecha_promedio": -0.86,
+      "ajuste_promedio": 0.91
+    },
+    {
+      "competencia": "Orden y la calidad (QA)",
+      "orden": 26,
+      "descripcion": "Competencia evaluada en la matriz de potencial.",
+      "personas": 1,
+      "valor_promedio": 4.86,
+      "esperado_promedio": 5.0,
+      "brecha_promedio": -0.14,
+      "ajuste_promedio": 0.99
+    },
+    {
+      "competencia": "Orientación / Asesoramiento",
+      "orden": 29,
+      "descripcion": "Competencia evaluada en la matriz de potencial.",
+      "personas": 7,
+      "valor_promedio": 3.95,
+      "esperado_promedio": 4.29,
+      "brecha_promedio": -0.73,
+      "ajuste_promedio": 0.93
+    },
+    {
+      "competencia": "Orientación al Cliente",
+      "orden": 2,
+      "descripcion": "Competencia evaluada en la matriz de potencial.",
+      "personas": 296,
+      "valor_promedio": 5.14,
+      "esperado_promedio": 5.34,
+      "brecha_promedio": -0.65,
+      "ajuste_promedio": 0.93
+    },
+    {
+      "competencia": "Orientación al Logro",
+      "orden": 3,
+      "descripcion": "Competencia evaluada en la matriz de potencial.",
+      "personas": 178,
+      "valor_promedio": 4.46,
+      "esperado_promedio": 5.79,
+      "brecha_promedio": -1.54,
+      "ajuste_promedio": 0.85
+    },
+    {
+      "competencia": "Orientación y adaptabilidad a las ventas",
+      "orden": 42,
+      "descripcion": "Competencia evaluada en la matriz de potencial.",
+      "personas": 6,
+      "valor_promedio": 5.02,
+      "esperado_promedio": 5.0,
+      "brecha_promedio": -0.4,
+      "ajuste_promedio": 0.96
+    },
+    {
+      "competencia": "Pensamiento Analítico",
+      "orden": 8,
+      "descripcion": "Competencia evaluada en la matriz de potencial.",
+      "personas": 74,
+      "valor_promedio": 5.16,
+      "esperado_promedio": 6.28,
+      "brecha_promedio": -1.42,
+      "ajuste_promedio": 0.86
+    },
+    {
+      "competencia": "Pensamiento estratégico",
+      "orden": 17,
+      "descripcion": "Competencia evaluada en la matriz de potencial.",
+      "personas": 21,
+      "valor_promedio": 5.37,
+      "esperado_promedio": 7.86,
+      "brecha_promedio": -2.57,
+      "ajuste_promedio": 0.74
+    },
+    {
+      "competencia": "Potencial de liderazgo",
+      "orden": 32,
+      "descripcion": "Competencia evaluada en la matriz de potencial.",
+      "personas": 4,
+      "valor_promedio": 4.4,
+      "esperado_promedio": 6.25,
+      "brecha_promedio": -1.85,
+      "ajuste_promedio": 0.82
+    },
+    {
+      "competencia": "Proactividad",
+      "orden": 4,
+      "descripcion": "Competencia evaluada en la matriz de potencial.",
+      "personas": 22,
+      "valor_promedio": 5.36,
+      "esperado_promedio": 4.09,
+      "brecha_promedio": -0.04,
+      "ajuste_promedio": 1.0
+    },
+    {
+      "competencia": "Productividad",
+      "orden": 11,
+      "descripcion": "Competencia evaluada en la matriz de potencial.",
+      "personas": 31,
+      "valor_promedio": 4.38,
+      "esperado_promedio": 5.06,
+      "brecha_promedio": -0.99,
+      "ajuste_promedio": 0.9
+    },
+    {
+      "competencia": "Relaciones públicas",
+      "orden": 61,
+      "descripcion": "Competencia evaluada en la matriz de potencial.",
+      "personas": 1,
+      "valor_promedio": 6.83,
+      "esperado_promedio": 7.0,
+      "brecha_promedio": -0.17,
+      "ajuste_promedio": 0.98
+    },
+    {
+      "competencia": "Resolución de problemas",
+      "orden": 45,
+      "descripcion": "Competencia evaluada en la matriz de potencial.",
+      "personas": 3,
+      "valor_promedio": 4.9,
+      "esperado_promedio": 6.0,
+      "brecha_promedio": -1.1,
+      "ajuste_promedio": 0.89
+    },
+    {
+      "competencia": "Responsabilidad",
+      "orden": 35,
+      "descripcion": "Competencia evaluada en la matriz de potencial.",
+      "personas": 33,
+      "valor_promedio": 4.17,
+      "esperado_promedio": 4.0,
+      "brecha_promedio": -0.16,
+      "ajuste_promedio": 0.98
+    },
+    {
+      "competencia": "Trabajo bajo presión",
+      "orden": 9,
+      "descripcion": "Competencia evaluada en la matriz de potencial.",
+      "personas": 37,
+      "valor_promedio": 3.7,
+      "esperado_promedio": 4.76,
+      "brecha_promedio": -1.16,
+      "ajuste_promedio": 0.88
+    },
+    {
+      "competencia": "Trabajo en equipo",
+      "orden": 5,
+      "descripcion": "Competencia evaluada en la matriz de potencial.",
+      "personas": 279,
+      "valor_promedio": 4.86,
+      "esperado_promedio": 4.9,
+      "brecha_promedio": -0.59,
+      "ajuste_promedio": 0.94
+    },
+    {
+      "competencia": "Trabajo sin supervisión",
+      "orden": 28,
+      "descripcion": "Competencia evaluada en la matriz de potencial.",
+      "personas": 12,
+      "valor_promedio": 5.04,
+      "esperado_promedio": 4.33,
+      "brecha_promedio": -0.12,
+      "ajuste_promedio": 0.99
+    },
+    {
+      "competencia": "Visión del Negocio",
+      "orden": 18,
+      "descripcion": "Competencia evaluada en la matriz de potencial.",
+      "personas": 52,
+      "valor_promedio": 5.0,
+      "esperado_promedio": 6.81,
+      "brecha_promedio": -1.85,
+      "ajuste_promedio": 0.82
+    },
+    {
+      "competencia": "Ética profesional",
+      "orden": 57,
+      "descripcion": "Competencia evaluada en la matriz de potencial.",
+      "personas": 1,
+      "valor_promedio": 7.47,
+      "esperado_promedio": 4.0,
+      "brecha_promedio": 0.0,
+      "ajuste_promedio": 1.0
+    }
+  ]
+}

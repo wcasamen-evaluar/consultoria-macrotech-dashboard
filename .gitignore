@@ -13,6 +13,7 @@
 *.pdf
 
 # Local input/output artifacts
+tmp/
 reporte/datos/
 reporte/output/
 ejemplos/

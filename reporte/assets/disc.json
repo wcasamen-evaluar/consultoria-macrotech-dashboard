@@ -1,0 +1,660 @@
+{
+  "schema_version": "1.0",
+  "source_file": "disc.xlsx",
+  "generated_at": "2026-07-06T16:37:08",
+  "archetypes": [
+    {
+      "id": 1,
+      "archetype": "ADAPTABLE(DISC)",
+      "name": "Adaptable",
+      "code": "DISC",
+      "personality": "El Adaptable es flexible y no tiene patrones de comportamiento definidos. Se va acoplando según las necesidades del medio y puede desempeñarse en cualquier contexto. Evita el conflicto y le gusta trabajar en equipo, aunque tampoco tiene problema por mantener la autonomía. Puede ser un buen líder cuando se lo requiere, pero también puede trabajar como parte del equipo, siguiendo reglas y procesos.",
+      "strengths": [
+        "Es altamente adaptable, no será un impedimento trabajar en situaciones cambiantes",
+        "Tiene un buen control sobre sus impulsos y emociones",
+        "Es equilibrado, busca desde su intuición cuál sería la mejor forma para trabajar ante cada circunstancia",
+        "Puede ser enérgico y extrovertido, pero también autónomo y enfocado al detalle",
+        "No tiene comportamientos fuertes ni constantes, trata de mantener el equilibrio dentro del equipo"
+      ],
+      "weaknesses": [
+        "No tiene comportamientos definidos; es difícil saber cómo reaccionará ante una situación",
+        "Tiende a cambiar de decisiones, sin comunicar al equipo o sin tener una razón clara",
+        "Puede ser visto como una persona inestable o que no sabe a dónde va",
+        "Su comunicación puede ser confusa o muy variable"
+      ],
+      "motivators": [
+        "Ser un puente de relación entre personas o conectar situaciones, poder ordenar las cosas según su convicción",
+        "Sentirse incluido, que encaja y que puede formar lazos sociales con cada miembro del equipo",
+        "Tener tiempo y libertad para tomar decisiones, poder analizar la situación y considerar las necesidades de los demás",
+        "Tener claro qué esperan de él y a dónde quieren llegar, saber cómo puede aportar a los objetivos compartidos"
+      ],
+      "demotivators": [
+        "Que le pidan que actúe de una manera predeterminada",
+        "Trabajar en situaciones monótonas o muy repetitivas donde no pueda aprovechar su adaptabilidad",
+        "Sentirse excluido del grupo, que no confíen en él o que nadie muestre interés por los demás",
+        "No ser tomado en cuenta o que nadie reconozca sus ideas y esfuerzos",
+        "Ser criticado por las acciones o resultados que obtiene"
+      ]
+    },
+    {
+      "id": 2,
+      "archetype": "ALENTADOR(Is)",
+      "name": "Alentador",
+      "code": "Is",
+      "personality": "El Alentador puede llegar a ser muy atractivo, ya que es empático, cálido y muestra real interés por las otras personas. Le gusta buscar el lado bueno de las cosas, es positivo y optimista. Les hace sentir a los demás que pertenecen al grupo de inmediato. Es abierto al diálogo, a las emociones y a escuchar lo que los otros piensan y sienten. Puede llegar a sacar lo mejor de las otras personas, se fija en el lado bondadoso de los demás. Le gusta compartir sus experiencias y generar un buen ambiente de trabajo.",
+      "strengths": [
+        "Su habilidad empática y su buen sentido del humor le ayudan a conectarse verbalmente con los demás y los motiva a seguir adelante",
+        "Se siente satisfecho y atraído por la interacción social y asegura la armonía en el grupo",
+        "Busca el bienestar de su equipo, y evalúa las características positivas de cada uno de ellos",
+        "Busca alianzas con sus colaboradores; no critica a los demás, más bien prefiere el diálogo que la confrontación",
+        "Tiene un amplio círculo social gracias a su alegría e informalidad"
+      ],
+      "weaknesses": [
+        "Puede sentirse amenazado cuando interactúa con personas firmes, críticas o que cuestionan su trabajo",
+        "Tiende a ser confiado y cree que todos tienen buenos propósitos",
+        "Por su búsqueda de aprobación social puede tornarse dócil, flexible o fácil de manipular",
+        "Tiende a ser fantaseador o idealista en sus objetivos, por lo que en ocasiones le cuesta cumplir con las tareas",
+        "Su comunicación no es directa, busca formas para suavizar las cosas"
+      ],
+      "motivators": [
+        "Ser libre de expresar lo que piensa y siente",
+        "Trabajar en equipo, interactuando con sus compañeros y con otros departamentos de la organización",
+        "Comprender y explicar cómo le afectaría a cada miembro de su equipo una decisión que se tome",
+        "Capacitar, asesorar y desarrollar a otras personas, con un lenguaje informal y expresivo",
+        "Lanzarse a nuevos retos, dejándose llevar por su intuición"
+      ],
+      "demotivators": [
+        "Hacer un trabajo monótono y solitario, seguir procedimientos estrictos",
+        "Tener que presentar informes escritos que lleven mucha minuciosidad y detalle de las actividades que realiza o que sean estrictamente analíticos",
+        "Tener plazos para cumplir las cosas y presionar al equipo de trabajo para que se apresure en las actividades",
+        "Enfocarse únicamente en los resultados y en lo que hay que hacer, sin importar qué piensan o quieren los demás",
+        "Sentirse aislado o rechazado por su grupo de trabajo, o si sus compañeros son fríos y cortantes"
+      ]
+    },
+    {
+      "id": 3,
+      "archetype": "ANALÍTICO(C)",
+      "name": "Analítico",
+      "code": "C",
+      "personality": "El Analítico está orientado a la tarea y motivado por resolver problemas de una manera metodológica y pragmática. Busca realizar todas sus actividades con precisión y meticulosidad. Tiende a ser perfeccionista. Es introvertido y reflexivo, prefiere trabajar solo, donde pueda mantenerse dentro de sus pensamientos. En la interacción social, es más bien reservado y discreto, le cuesta mostrar sus sentimientos o ser empático con las emociones de los otros.",
+      "strengths": [
+        "Es confiable y diligente con las tareas, sigue los procedimientos y toma decisiones bien pensadas",
+        "Al momento de asignar tareas, explica detalladamente lo que espera como resultado final",
+        "Es autónomo en su trabajo, recopila gran cantidad de información, investiga los resultados del pasado para controlar los riesgos",
+        "Es analítico y un buen observador, lo que le ayuda a canalizar los errores y asegurar la calidad del trabajo"
+      ],
+      "weaknesses": [
+        "Tiende a trabajar solo y a restar importancia a las relaciones interpersonales",
+        "Su perfeccionismo puede convertirse en un obstáculo para proyectos con fechas límites",
+        "Le puede resultar complicado hablar sobre sus sentimientos",
+        "Se pueden causar malos entendidos a causa de su baja empatía",
+        "Puede dudar al momento de tomar decisiones directas y espontáneas",
+        "Los conflictos le causan un desgaste energético, por lo que prefiere ceder antes que discutir"
+      ],
+      "motivators": [
+        "Trabajar en ambientes calmados y estructurados donde ya exista una metodología comprobada",
+        "Tener metas claras",
+        "Trabajar de una manera independiente",
+        "Establecer procesos eficientes que siguen reglamentos bien definidos",
+        "Analizar información técnica, numérica o datos en los que sea un especialista en el tema"
+      ],
+      "demotivators": [
+        "Motivar y dirigir a un gran grupo de personas, compartir grandes historias de éxito",
+        "Manejar lluvias de ideas o temas que involucren temas emocionales",
+        "Esperar a que otros terminen su trabajo para poder desarrollar sus funciones",
+        "Trabajar con un equipo poco estructurado",
+        "Verse involucrado en muchas conversaciones informales",
+        "Tener múltiples actividades a la vez o que cambien de un día para el otro"
+      ]
+    },
+    {
+      "id": 4,
+      "archetype": "AUTÓNOMO(DS)",
+      "name": "Autónomo",
+      "code": "DS",
+      "personality": "El Autónomo confía en sí mismo y en sus capacidades. Le gusta tener responsabilidades que le generen retos y conseguir lo que se propone. Está dispuesto a ayudar a los demás porque le motiva su reconocimiento. Está abierto a tomar nuevos desafíos, trabaja constantemente y con alta perseverancia para cumplir con ellos. Tiene mucha creatividad para resolver problemas y no requiere de métodos fijos a seguir.",
+      "strengths": [
+        "Busca ver resultados a corto y mediano plazo, mostrando esmero, rapidez y eficacia en sus proyectos",
+        "Tiene muchas ideas en mente, está involucrado en muchos proyectos a la vez y salta de una actividad a otra",
+        "Le gusta romper los paradigmas, hacer las cosas de una manera diferente y probar nuevas formas de conseguir los resultados esperados",
+        "Está preparado para apoyar a los demás y aprovecha para perseguir sus propias metas"
+      ],
+      "weaknesses": [
+        "Tiende a no delegar y cargarse de una gran cantidad de trabajo que no puede manejar, hasta que termina perdiendo de vista las prioridades",
+        "Puede estar en juego su confiabilidad, ya que está desarrollando un proyecto y puede cambiarlo por completo al siguiente día",
+        "Al tener tantas ideas en mente, su comunicación puede parecer carente de objetivo, ya que sólo expresa sus ideas sin un argumento claro",
+        "Puede ser visto como presumido o como si quisiera llamar la atención, ya que quiere llevarse todo el crédito de los resultados"
+      ],
+      "motivators": [
+        "Desarrollar ideas innovadoras, ser libre de implementar sus proyectos",
+        "Ser valorado por su disponibilidad para ayudar y por sus logros conseguidos",
+        "Tener cargos de autoridad que representen retos y que estén alineados a sus objetivos personales",
+        "Trabajar en ambientes abiertos y flexibles, donde pueda involucrarse en varias tareas y funciones"
+      ],
+      "demotivators": [
+        "Estar frecuentemente en reuniones que no le aporten con las tareas que está desarrollando",
+        "Involucrarse emocionalmente con su equipo de trabajo, sin poder resolver el problema",
+        "Desarrollar tareas rutinarias, que no requieran reto y donde hay que seguir un manual de procedimientos",
+        "Trabajar en colaboración con sus compañeros, que sus logros dependan del rendimiento de otras personas"
+      ]
+    },
+    {
+      "id": 5,
+      "archetype": "CARISMÁTICO(Id)",
+      "name": "Carismático",
+      "code": "Id",
+      "personality": "El Carismático es extrovertido y orientado a la interacción social. Es abierto, optimista y enérgico. Su lenguaje es informal, relajado y empático con los demás. Le gusta ser el centro de atención, manifestar sus ideas y que la gente se divierta. Además es aventurero; le gusta tener varias opciones y arriesgarse a cosas nuevas. Disfruta conocer nuevos ambientes, como también a nuevas personas. Le gusta un ambiente flexible, donde pueda tener libertad de emitir su criterio y sus pensamientos.",
+      "strengths": [
+        "Es optimista y alegre, ve lo positivo en cada situación",
+        "Su capacidad de innovación y creatividad puede ayudarle a encontrar varios caminos",
+        "Puede ganarse el respeto y la confianza de quienes le rodean, motivándonos a salir de su zona de confort",
+        "Su carisma le ayuda a atraer a nuevos clientes y cerrar tratos",
+        "Es bueno trabajando en equipo y delegando funciones según las destrezas de cada uno de los miembros"
+      ],
+      "weaknesses": [
+        "Su búsqueda de aceptación lo puede convertir en una persona influenciable o hacer que pase por alto los objetivos organizacionales",
+        "Tiende a ser desorganizado e impaciente en sus proyectos, saltando de una idea a otra o ignorando los detalles o posibles obstáculos",
+        "Le cuesta seguir rutinas o actividades repetitivas que requieran mucha minuciosidad",
+        "Puede volverse manipulador con los otros para conseguir sus objetivos"
+      ],
+      "motivators": [
+        "Tener la libertad de expresar su opinión o de aportar con sus ideas",
+        "Cuando su trabajo está relacionado con el manejo de equipos, la interacción social con clientes o entre departamentos",
+        "Buscar información o nuevas oportunidades para desarrollarlas",
+        "Obtener reconocimiento por su trabajo o por sus ideas",
+        "Que su equipo tenga su mismo ritmo de trabajo y energía, y que confíen en él y en sus ideas"
+      ],
+      "demotivators": [
+        "Trabajar mucho tiempo al frente de un computador o en un ambiente solitario y monótono",
+        "Sentirse presionado por resultados excelentes o perfectos, ser cuestionado por todas sus ideas no desarrolladas",
+        "Que su grupo de trabajo sea pasivo y lento, o que duden de sus decisiones y su autoridad",
+        "No poder proponer nuevas ideas, no ser escuchado o aceptado por el grupo",
+        "Le resulta un reto comunicarse por escrito, o redactar informes con mucha minuciosidad"
+      ]
+    },
+    {
+      "id": 6,
+      "archetype": "COLABORADOR(Si)",
+      "name": "Colaborador",
+      "code": "Si",
+      "personality": "El Colaborador está orientado al servicio de las personas, y le gusta ayudar a los otros. Es sociable, amigable y solidario. Su principal característica es que está dispuesto a escuchar a los demás y busca ayudarlos. Se vuelve confiable para su equipo, porque es empático y cumple su palabra. Por ende, lleva un buen equilibrio entre las interacciones sociales y las funciones que debe desempeñar en el trabajo.",
+      "strengths": [
+        "Motiva al equipo para que trabaje en grupo, apoyándose entre sí, y aporte para un mejor desempeño",
+        "Forma confianza y brinda apoyo durante cambios fuertes que tiene la organización",
+        "Busca la equidad y la armonía en el medio que se desarrolla",
+        "Aconseja y capacita a los otros para que salgan adelante",
+        "Escucha las ideas de cada miembro y se preocupa por el bienestar de su grupo"
+      ],
+      "weaknesses": [
+        "Se torna manipulable en situaciones de conflicto, tiende a ceder a las peticiones de los otros",
+        "Puede afectar a sus propios objetivos por intentar ayudar en los problemas de otros",
+        "Ser objetivo y buscar resultados cuando su equipo está pasando por una situación difícil",
+        "Su comunicación puede contener muchos elogios o halagos, buscando pertenecer al grupo",
+        "Duda mucho al tomar decisiones ya que piensa en las necesidades de cada miembro de su equipo"
+      ],
+      "motivators": [
+        "Colaborar y motivar la cooperación dentro de su equipo",
+        "Trabajar con jefes abiertos que están dispuestos a interesarse por las necesidades del grupo",
+        "Actuar como mentor o enseñar sobre un tema que domina",
+        "Desarrollar los proyectos claramente detallados, donde sabe con qué paso debe continuar",
+        "Desenvolverse en ambientes flexibles, amigables y dinámicos en los que pueda exponer sus ideas y no ser juzgado",
+        "Mantener estabilidad en sus funciones y en su área laboral"
+      ],
+      "demotivators": [
+        "Sentirse excluido de decisiones o de eventos, sentirse rechazado por sus compañeros",
+        "Cuando sus jefes son hostiles, cerrados e indiferentes y toman decisiones que afectan al grupo",
+        "Desarrollar proyectos innovadores, sin la información necesaria y entregarlos en un plazo muy pequeño",
+        "Buscar o criticar los errores de su equipo de trabajo, comparar y juzgar su desempeño",
+        "Trabajar bajo objetivos que no sean claros ni organizados"
+      ]
+    },
+    {
+      "id": 7,
+      "archetype": "CONCILIADOR(IS)",
+      "name": "Conciliador",
+      "code": "IS",
+      "personality": "El Conciliador está orientado a las personas, tiende a ser el mediador del grupo y a buscar la calma en sus interacciones sociales. Le llena de energía estar rodeado de personas e interactuar con ellas. Busca mantener la estabilidad, evitando las confrontaciones y las críticas. Se muestra optimista y alegre. Le motiva aprender de otros y su conocimiento se alimenta de las historias de los demás, de lo que piensan o sienten ellos.",
+      "strengths": [
+        "Escucha a los otros y se interesa por sus ideas, los incluye en sus decisiones",
+        "Puede sacar lo mejor de las personas, las motiva e incita a salir de su zona de confort",
+        "Ayuda a generar acuerdos y a crear armonía en el grupo",
+        "Es una persona intuitiva, guiada por la parte emocional, lo cual le hace fácil conectar con otras personas",
+        "Su comunicación es abierta e informal, comparte sus historias personales y el aprendizaje que obtuvo de ellas"
+      ],
+      "weaknesses": [
+        "Demuestra incomodidad al comunicarse con personas hostiles o agresivas, y prefiere evadir el contacto",
+        "Como se fija en los puntos positivos de las situaciones, puede llegar a ser demasiado tolerante, minimizando o ignorando los puntos adversos",
+        "No ser firme en los momentos de confrontación o llamados de atención, busca que se transmita el mensaje de una forma indirecta",
+        "Se desmotiva fácilmente cuando no es tomado en cuenta o no es incluido en su grupo de trabajo",
+        "Duda en tomar decisiones rápidas por miedo a afectar a alguien"
+      ],
+      "motivators": [
+        "Ser servicial en el trabajo, poder ayudar y motivar a sus compañeros, enseñando con sus propias experiencias",
+        "Desenvolverse en ambientes flexibles, amigables y dinámicos en los que pueda exponer sus ideas sin ser juzgado",
+        "Generar diálogos y asumir el rol de mediador entre los departamentos",
+        "Tener jefes abiertos y amigables con los que pueda consultar si tiene problemas"
+      ],
+      "demotivators": [
+        "Comunicar de una manera directa las cosas con las que no está de acuerdo o criticar los errores de sus compañeros",
+        "Si sus compañeros lo excluyen o no lo toman en cuenta para las actividades",
+        "Tomar decisiones radicales que perjudiquen a su grupo de trabajo, sin tomar en cuenta lo que piensan los demás",
+        "Seguir procedimientos establecidos que requieran trabajar individualmente o mantener una alta concentración por mucho tiempo"
+      ]
+    },
+    {
+      "id": 8,
+      "archetype": "CONFIRMADOR(Cd)",
+      "name": "Confirmador",
+      "code": "Cd",
+      "personality": "El Confirmador realiza sus tareas con un enfoque lógico y con gran precisión. Tiende a trabajar de forma independiente. Aprecia los métodos probados y basados en hechos, y puede implementarlos sin muchas instrucciones. Trata constantemente de optimizar los procesos y hacerlos más eficientes. Por esto, suele establecer altos estándares para sí mismo y otros, realiza preguntas específicas para profundizar los temas, si le queda alguna duda.",
+      "strengths": [
+        "Busca terminar con excelencia lo que comienza y exige lo mismo de los demás",
+        "Recopila toda la información necesaria y la evalúa antes de tomar una decisión",
+        "Está centrado en la realidad y en los hechos concretos y comprobables",
+        "Asume responsabilidad de sus acciones de principio a fin",
+        "Tiene facilidad para resolver problemas, si el objetivo está bien definido"
+      ],
+      "weaknesses": [
+        "Busca las fallas de las cosas y tiende a criticar en vez de brindar su apoyo",
+        "Le cuesta hablar de emociones o sentimientos, lo cual perjudica su capacidad empática y causa malos entendidos",
+        "Le cuesta manejar las situaciones ambiguas o una multitud de actividades a la vez",
+        "Puede llegar a perderse en los detalles y retrasar los proyectos",
+        "Puede ser terco o cerrado cuando debate los puntos de vista de otros que están en oposición al suyo"
+      ],
+      "motivators": [
+        "Tener autonomía y trabajar bajo su propio ritmo hacia objetivos claros",
+        "Sentirse respetado o que la gente toma en cuenta su opinión y su conocimiento",
+        "Crear manuales, procedimientos o reglamentos que fomenten el orden y la estructura",
+        "Buscar información e investigar sobre un tema que le apasione y que se conecte con sus objetivos"
+      ],
+      "demotivators": [
+        "Depender del trabajo de otros para poder desarrollar sus funciones, trabajar en colaboración con otras personas",
+        "Conectarse con las personas en su parte emocional o en sus conflictos personales",
+        "Cuando sus nuevos compañeros o sus nuevos jefes quieren saber mucho sobre su vida privada",
+        "Trabajar en un ambiente ruidoso o desordenado, donde no pueda cumplir sus funciones a la perfección"
+      ]
+    },
+    {
+      "id": 9,
+      "archetype": "DIRECTOR(D)",
+      "name": "Director",
+      "code": "D",
+      "personality": "El Director se caracteriza por un estilo fuerte y de autoridad. Le gusta tener su propio espacio y que respeten sus ideas. Es seguro de sí mismo y confía fuertemente en sus capacidades. Acepta riesgos ya que se considera autosuficiente. Se enfoca en lograr resultados físicos y tangibles, le gusta que los demás perciban sus aportes dentro de la organización. Es ambicioso, directo y decidido cuando toma decisiones, ya que su afán será llegar a la meta.",
+      "strengths": [
+        "Es asertivo en la comunicación, busca ser directo y claro en lo que quiere",
+        "Está orientado a las tareas y a conseguir resultados",
+        "Es rápido y persistente al momento de tomar decisiones, mantiene sus ideas firmes",
+        "Está cómodo cuando le asignan riesgos o responsabilidades y le gusta mantenerse ocupado",
+        "Actúa como líder de cambio y de innovación"
+      ],
+      "weaknesses": [
+        "Puede ser cerrado en sus ideas o incluso no escuchar a los demás",
+        "Cuando no consigue lo que quiere, puede llegar a frustrarse fácilmente",
+        "Tiende a no tomar en cuenta el tiempo, los recursos materiales o el capital humano",
+        "Puede ser visto como orgulloso o pedante",
+        "Puede saltarse procedimientos, detalles importantes o minimizar las fallas por conseguir resultados rápidos"
+      ],
+      "motivators": [
+        "Ser la cabeza de proyectos arriesgados donde pueda ver resultados rápidos, eficientes y tangibles",
+        "Tener la libertad de tomar decisiones por sí mismo, sin depender de otros",
+        "Asegurar que la gente siga sus instrucciones, sin preocuparse demasiado por cómo comunicar las cosas",
+        "Estar a la vanguardia de la información, competir con los demás y ganar \"sus batallas\""
+      ],
+      "demotivators": [
+        "Dedicar tiempo a los otros para escuchar quejas y reclamos",
+        "Perder la autonomía, depender de criterios de otros para tomar decisiones",
+        "Ser desaprobado o ignorado en sus ideas, sentirse criticado por su trabajo",
+        "Profundizar en explicaciones o respuestas sobre decisiones que han tomado o sobre la estructura de su trabajo",
+        "Si su grupo de trabajo no va a su ritmo o no entiende la visión de sus objetivos"
+      ]
+    },
+    {
+      "id": 10,
+      "archetype": "EJECUTOR(SC)",
+      "name": "Ejecutor",
+      "code": "SC",
+      "personality": "El Ejecutor es examinador y concreto. Investiga y analiza sobre lo que se espera de él para generar planes detallados de acción, buscando mostrar su eficiencia. Prefiere tener objetivos bien definidos, y es diligente para conseguir los resultados que desea. Una vez que sabe cuál es su meta, es perseverante hasta alcanzarla. En caso de conflictos, prefiere adaptarse a los demás, busca la constancia y la calma.",
+      "strengths": [
+        "Es autodisciplinado y organizado, busca lograr las metas que se propone, siguiendo métodos establecidos",
+        "Le gusta la estructura y es orientado al detalle",
+        "Busca aumentar la eficiencia y desarrollar a los demás, observando las habilidades que tiene cada miembro",
+        "Evita la crítica, los rumores y los conflictos, llega a acuerdos con los demás",
+        "Trata de incluir a todos en las actividades y busca su apoyo"
+      ],
+      "weaknesses": [
+        "Puede ser poco expresivo y evasivo, ya que guarda los sentimientos",
+        "Puede ser un gran desafío manejar innovaciones que no han sido probadas antes",
+        "Su forma de comunicación puede llegar a ser tosca o fría al momento de dar indicaciones",
+        "Necesita mucha planificación y detalles para tomar decisiones; prefiere soluciones conservadoras",
+        "Es resistente al cambio o necesita un tiempo considerable para adaptarse"
+      ],
+      "motivators": [
+        "Trabajar en actividades rutinarias, con procesos bien definidos y una clara división de las tareas",
+        "Trabajar con jefes directos y previsibles, aclarando qué se espera de él",
+        "Realizar informes analíticos o manuales técnicos que necesitan ser revisados a detalle",
+        "Trabajar en investigaciones, donde hay que buscar mucha información y comprobar los hechos"
+      ],
+      "demotivators": [
+        "Revisar el trabajo de los demás cuando está desordenado, es muy abstracto o no tiene sustento teórico",
+        "Tener que tomar decisiones apresuradas",
+        "Desarrollar actividades que no estén bien organizadas, o que sus compañeros no sigan los plazos ni las reglas",
+        "Escuchar problemas personales de otros o manejar situaciones muy emocionales",
+        "Motivar a los otros para que desarrollen nuevas ideas, o innovar en productos intangibles"
+      ]
+    },
+    {
+      "id": 11,
+      "archetype": "EL ENTUSIASTA(I)",
+      "name": "El Entusiasta",
+      "code": "I",
+      "personality": "Al Entusiasta le gusta ser optimista ante las circunstancias. Mantiene una actitud alegre y divertida, le gusta las aventuras y los nuevos estímulos. Es abierto y comunicativo. Le gusta ser el centro de atención de las reuniones sociales, y suele ser el que rompe el hielo. Es espontáneo y un gran creador de ideas, puede empezar un proyecto con mucha energía; pero si se vuelve una rutina, estará dispuesto a saltar a otra actividad que se haya robado su atención.",
+      "strengths": [
+        "Estimula a los demás a salir de su zona de confort, sacando lo mejor de ellos",
+        "Se le hace fácil generar ambientes amigables y positivos por su buen sentido del humor y su espontaneidad",
+        "Sabe adaptarse a los imprevistos y puede manejarlos de una buena manera",
+        "Es creativo y lleno de nuevas ideas; puede generar distintas percepciones sobre las cosas",
+        "Es dinámico y productivo, busca resultados a corto plazo"
+      ],
+      "weaknesses": [
+        "Su optimismo puede llevarle a negar los riesgos o a ser impulsivo en cuanto a la toma de decisiones",
+        "Sus fantasías pueden generar promesas que después no puede llegar a cumplir",
+        "Su búsqueda de aceptación y atención puede desviarle del objetivo principal",
+        "La rutina y los sistemas rígidos o controlados le aburren fácilmente, y le cuesta mantener el foco para terminar sus tareas",
+        "Le resulta desgastante planificar a detalle, por lo cual usa la improvisación"
+      ],
+      "motivators": [
+        "Discutir ideas sobre la sociedad, de trascendencia o de posibilidades futuras",
+        "Ser libre de expresarse, compartir sus experiencias e interactuar con personas",
+        "Trabajar en ambientes flexibles, donde no se presenten conflictos, ni confrontaciones",
+        "Trabajar y decidir en grupo, desenvolverse en ambientes sociales",
+        "Trabajar con jefes flexibles, de mente abierta y que les gusta innovar"
+      ],
+      "demotivators": [
+        "Hacer un trabajo rutinario, repetitivo o solitario",
+        "Presentar muchos informes escritos de las actividades que realiza, ser minucioso y detallado",
+        "Resolver problemas que requieran un análisis profundo y resultados precisos",
+        "Sentir que su equipo no lo apoya en los objetivos o notar que sus compañeros de trabajo están desmotivados",
+        "Sentirse cuestionado o no aceptado por su jefe o su equipo de trabajo"
+      ]
+    },
+    {
+      "id": 12,
+      "archetype": "EL VALIENTE(DI)",
+      "name": "El Valiente",
+      "code": "DI",
+      "personality": "El Valiente es extrovertido e impulsado a la interacción social de una manera abierta y activa. Le gusta estar en medio del contacto social, emitiendo sus ideas y ganándose el reconocimiento y la aprobación de la gente. Tiene habilidades persuasivas para llegar a las personas y convencerlas de sus planes. Tiene ideas innovadoras, y le gusta ir desarrollándolas en el camino. Además es creativo, lo cual le ayuda a manejar imprevistos y encontrar otras salidas.",
+      "strengths": [
+        "Es entusiasta, enérgico y vivaz al momento de transmitir sus ideas",
+        "Le gustan las nuevas oportunidades o responsabilidades que demanden reto, sabe manejar los conflictos e imprevistos con creatividad",
+        "Confía en sí mismo, puede tomar riesgos y decisiones rápidas en situaciones ambiguas",
+        "Se da el tiempo de conocer a su equipo, para saber a quién delegar las actividades en sus proyectos",
+        "Puede empezar proyectos con poca información e ir solucionando los problemas en la marcha"
+      ],
+      "weaknesses": [
+        "Suele no revisar los detalles, delega todas las actividades operativas y de rutina",
+        "Tiene muchas ideas y proyectos que quiere desarrollar a la vez, lo cual baja su nivel de eficiencia",
+        "Acepta nuevos retos sin planificar su tiempo",
+        "Su optimismo, sentido del humor o su comunicación informal puede no ser comprendida o bien vista por otros",
+        "Puede tomar decisiones impulsivas, lanzándose a nuevos retos sin analizar su alcance",
+        "Pierde la paciencia cuando no trabajan a su ritmo o cuando no siguen su nivel de interacción"
+      ],
+      "motivators": [
+        "Hablar en público, presentar el trabajo realizado con su equipo, ser el difusor de ideas y la conexión con otros departamentos",
+        "Trabajar con personas ágiles que capten sus ideas y que logren resultados",
+        "Tener libertad y recursos para implementar sus nuevas ideas, y poder superar los obstáculos que se den en el camino",
+        "Que los demás le escuchen y se sientan motivados con su discurso"
+      ],
+      "demotivators": [
+        "Trabajar en tareas repetitivas o que generan mucho detalle",
+        "Tener que dar explicaciones de cosas que no le parecen relevantes",
+        "Trabajar con personas escépticas que se fijen en el porqué no se puede hacer las cosas",
+        "Controlar que los demás sigan todos los pasos que él propuso",
+        "No le gusta trabajar en entornos rígidos, donde no pueda desarrollar su espontaneidad",
+        "Le cuesta ser planificado y minucioso en sus actividades",
+        "No le gusta desarrollar planes de acción donde tenga que explicar paso a paso lo que va a hacer"
+      ]
+    },
+    {
+      "id": 13,
+      "archetype": "MODERADO(IC)",
+      "name": "Moderado",
+      "code": "IC",
+      "personality": "El Moderado es extrovertido y amigable, le gusta el trabajo en equipo. Planifica y detalla claramente los pasos que va a seguir para sus proyectos y comparte constantemente con su grupo. Se siente motivado por ayudar a otros a enfocarse en terminar las tareas. Busca un ganar-ganar, y se siente motivado por conseguir metas en equipo. Es más modesto, conservador y evita los conflictos, prefiere los ambientes calmados y colaborativos.",
+      "strengths": [
+        "Es amigable y está dispuesto a escuchar a los demás, es cálido y empático en sus relaciones sociales",
+        "Cuando toma decisiones, piensa en las necesidades de su equipo y toma en consideración todas las sugerencias",
+        "Es buen capacitador, le gusta apoyar y enseñar a los demás",
+        "Es detallista, le gusta tener una planificación clara de las tareas y cuál será el objetivo final",
+        "Es competitivo, le gusta ganar en sus proyectos, siempre busca oportunidades de mejorar su propio rendimiento"
+      ],
+      "weaknesses": [
+        "Quiere ganar en sus competencias y se siente frustrado cuando no lo consigue",
+        "Puede sentirse desmotivado o defraudado cuando su equipo no logra metas tangibles",
+        "Puede tornarse impaciente o crítico con sus compañeros, cuando no siguen un ritmo de trabajo constante",
+        "Busca generar buena impresión y la aceptación del grupo",
+        "Le cuesta trabajar completamente solo y en situaciones de caos o conflicto"
+      ],
+      "motivators": [
+        "Trabajar en un ambiente amigable, ser aceptado y sentirse parte del grupo",
+        "Poder colaborar y apoyar a su equipo para que salga adelante y trabaje con alta calidad",
+        "Que confíen en su trabajo y le pidan ayuda para lograr las metas",
+        "Desarrollar actividades estratégicas y analizar los resultados",
+        "Tener claros los procedimientos, los objetivos y las reglas, poder planificar sus proyectos con calma"
+      ],
+      "demotivators": [
+        "Trabajar en situaciones de caos, o saltar de una idea a otra sin planificación y con muchos imprevistos",
+        "Trabajar aislado o que no tenga interacción social alguna",
+        "Tener jefes poco empáticos o cerrados a escuchar y solamente recibir órdenes tajantes",
+        "Trabajar con un equipo conflictivo y poco colaborador, o que sus compañeros desobedezcan las reglas",
+        "Ser criticado por su trabajo o por los resultados que consigue"
+      ]
+    },
+    {
+      "id": 14,
+      "archetype": "ORGANIZADOR(Sc)",
+      "name": "Organizador",
+      "code": "Sc",
+      "personality": "El Organizador es equilibrado y busca la calma y la consistencia en su vida. Se siente más cómodo siguiendo procesos que estén bien organizados. Verifica los detalles y la calidad de los procedimientos. Es eficiente, y se muestra humilde en cuanto a sus logros. No le molesta trabajar en rutinas que ya conoce y que puede desarrollar. Le gusta interactuar con otros para tomar decisiones, busca sinergia y bienestar en el equipo.",
+      "strengths": [
+        "Es muy eficiente cuando trabaja en áreas de su agrado y se siente reconocido",
+        "Es cauteloso cuando toma decisiones, y toma en cuenta todas las variables",
+        "Es modesto, no le gusta hablar de él mismo y prefiere escuchar a los demás",
+        "Su comportamiento es predecible y mesurado",
+        "Se siente cómodo cuando sigue rutinas y reglas establecidas"
+      ],
+      "weaknesses": [
+        "Puede ser un gran desafío manejar proyectos de innovación que no han sido probados antes",
+        "Es resistente al cambio o necesita un tiempo considerable para adaptarse",
+        "Necesita mucha planificación y detalles para tomar decisiones; prefiere soluciones conservadoras",
+        "Sus principios y solidez pueden llegar a ser su propia cárcel",
+        "Le cuesta asimilar las críticas o comentarios negativos, y tiende a tomarlos como personales o esquivarlos"
+      ],
+      "motivators": [
+        "Colaborar con las personas y sentirse aceptado y reconocido en el grupo",
+        "Desenvolverse en ambientes controlados y ordenados que tengan objetivos claros",
+        "Realizar acciones concretas y claramente útiles, recibir un refuerzo inmediato",
+        "Ser capacitado con ejemplos prácticos y aplicables, más que únicamente con teoría"
+      ],
+      "demotivators": [
+        "Trabajar en un ambiente donde haya caos, riñas o peleas entre compañeros",
+        "Ser el centro de atención o estar en la mira de todo su equipo, ser criticado por sus acciones",
+        "Ser forzado a criticar o retar el trabajo de los compañeros",
+        "Tener que trabajar sin planificación o en tareas que cambian de un día al otro",
+        "Ser presionado para tomar decisiones apresuradas, ser innovador sin tener un plan de acción o suficiente información"
+      ]
+    },
+    {
+      "id": 15,
+      "archetype": "ORIENTADOR(Di)",
+      "name": "Orientador",
+      "code": "Di",
+      "personality": "El Orientador es extrovertido, directo y vivaz. Le gusta hacer las cosas a su manera y de una forma rápida. Alcanza sus metas influenciando a los demás, por lo cual busca ser la cabeza de sus proyectos y que la gente siga sus propuestas. Para cumplir con sus tareas, plantea objetivos claros y lidera a la gente alentándola a seguirlo. Al dialogar con los demás, transmite sus ideas abiertamente y se siente motivado por transmitir sus objetivos al equipo. Trata de empujar y convencer a los otros para que sigan sus ideales y que vayan a su ritmo.",
+      "strengths": [
+        "Está orientado a conseguir retos, motivando a los otros para que lo sigan",
+        "Le gusta asumir la responsabilidad en proyectos nuevos y tomar decisiones que involucren riesgos",
+        "Es rápido, competitivo y persistente al momento de actuar",
+        "Le gusta trabajar eficientemente y busca mejorar constantemente",
+        "No se estanca en los detalles y prefiere que su grupo de trabajo se encargue de ellos; su meta es seguir adelante a pesar de los obstáculos que se presenten"
+      ],
+      "weaknesses": [
+        "Puede llegar a frustrarse cuando los demás no entienden sus ideales o no siguen sus pasos",
+        "Es competitivo e impaciente, por lo que algunas veces se pone terco por querer mantener su criterio",
+        "No da importancia a los detalles y busca que otros los resuelvan",
+        "Su deseo de innovar puede generar que no tome en cuenta el tiempo, los recursos materiales o el capital humano",
+        "Tiene muchos proyectos y nuevas ideas que quiere desarrollar a la vez"
+      ],
+      "motivators": [
+        "Ser el líder en su grupo de trabajo, presentar sus puntos de vista y plantear sus objetivos",
+        "Ser reconocido por su convicción y que su grupo de trabajo crea en él y en su conocimiento",
+        "Tener nuevas oportunidades y nuevos retos para desarrollar",
+        "Tener la facilidad de buscar información rápida y eficiente",
+        "Tomar decisiones y acciones inmediatas"
+      ],
+      "demotivators": [
+        "Crear análisis o informes muy detallados",
+        "Ser el mediador e intentar seguir al grupo de una forma lenta y pasiva",
+        "Tener una rutina establecida, donde no pueda innovar, ni proponer sus ideas",
+        "Analizar las causas y consecuencias de sus decisiones, tomando en cuenta el bien común",
+        "Enfocarse en los procedimientos y dar explicaciones de cosas que no le parecen importantes"
+      ]
+    },
+    {
+      "id": 16,
+      "archetype": "PROGRESISTA(CD)",
+      "name": "Progresista",
+      "code": "CD",
+      "personality": "El Progresista está orientado a la tarea, a conseguir sus metas y lo que se propone. Trata de que todo lo que hace le salga a la perfección. Puede ser distante en ocasiones o no involucrar emocionalidad en sus tareas. Tiene facilidad para tomar decisiones rápidamente, pero prefiere visualizar todas las posibilidades existentes y explorar otros resultados para sentirse muy seguro de lo que va a hacer.",
+      "strengths": [
+        "Busca la solución óptima y de alta calidad, verifica y analiza los posibles resultados",
+        "Planifica sus proyectos, definiendo los horarios y quién va a hacer cada tarea",
+        "Mantiene un alto ritmo de trabajo y le gusta que su equipo sea eficiente",
+        "Asume responsabilidad de sus acciones, inicia cambios y promueve el desarrollo de sus ideales",
+        "Es objetivo, directo y concreto en su interacción social"
+      ],
+      "weaknesses": [
+        "Puede herir a personas sensibles o ser visto como distante o egoísta por descuidar las necesidades de los otros",
+        "Se aburre con trabajos repetitivos, reclama la autoridad para buscar información y tomar nuevos caminos",
+        "Es desconfiado del trabajo de los otros, por lo cual tiende a controlar su desempeño",
+        "Puede perder la calma cuando siente amenazada su autonomía o su autoridad"
+      ],
+      "motivators": [
+        "Verificar y supervisar el desarrollo de sus proyectos, como también, controlar el desempeño de su equipo",
+        "Tener cargos de responsabilidad, que demanden resolver conflictos o retos analíticos",
+        "Tener autoridad y sentir que su jefe confía en sus capacidades",
+        "Si su trabajo involucra autonomía y libertad para tomar decisiones",
+        "Conseguir resultados tangibles y progresar en sus metas"
+      ],
+      "demotivators": [
+        "Involucrarse sentimentalmente con su equipo de trabajo, escuchar sus problemas o contar sus anécdotas de vida",
+        "Asistir a reuniones o discusiones grupales, participar en lluvias de ideas para tomar decisiones",
+        "Depender de otros para lograr sus metas o cuando los recursos le limitan para cumplir sus tareas",
+        "Cuando sus ideas no son tomadas en cuenta, no respetan su autoridad y no creen en sus capacidades"
+      ]
+    },
+    {
+      "id": 17,
+      "archetype": "SERVICIAL(S)",
+      "name": "Servicial",
+      "code": "S",
+      "personality": "El Servicial tiende a buscar la estabilidad, la tranquilidad, evita los cambios bruscos y las confrontaciones. Prefiere desarrollarse en ambientes conocidos y rutinarios, donde se siente seguro y conoce la dinámica del ambiente donde se encuentra. Es una persona obediente, le gustan las explicaciones claras; prefiere actuar y cumplir con las tareas, más que tomar decisiones o riesgos. Es una personalidad autocontrolada, prefiere hacerse a un lado ante los conflictos.",
+      "strengths": [
+        "Tiene un alto nivel de servicio y es paciente, se lo considera un buen capacitador",
+        "Se gana fácilmente la confianza de los otros, busca escucharlos y ayudarlos atentamente",
+        "Es leal a su empresa y a sus compañeros cuando se siente reconocido",
+        "Al tomar decisiones piensa en cada uno de los miembros de su equipo y busca la manera para que ninguno se vea afectado",
+        "Por su suavidad y sutileza en su interacción social, se acopla a otros tipos de personalidad"
+      ],
+      "weaknesses": [
+        "Le cuesta expresar su desacuerdo o comentar las cosas que le disgustan acerca del trabajo con sus jefes",
+        "Tiende a basar sus decisiones en el bienestar de los demás, más que en criterios objetivos",
+        "Suele tomarse su tiempo y pensar mucho antes de actuar",
+        "Tiene grandes ideas o soluciones, pero prioriza las ideas de otros, ya que, por lo general, prefiere pasar desapercibido y seguir un plan ya conocido"
+      ],
+      "motivators": [
+        "Trabajar en ambientes seguros y más bien rutinarios, donde los procesos sean claros",
+        "Saber con certeza cuáles son los objetivos de su trabajo, y que le digan qué se espera de él",
+        "Ser liderado por un jefe amable, abierto y que reconoce su esfuerzo",
+        "Cooperar en el grupo y trabajar en equipo",
+        "Aunque le gusta el trabajo en equipo, también puede ser muy eficiente trabajando autónomamente"
+      ],
+      "demotivators": [
+        "Tener que pasar por reestructuraciones frecuentes o repentinas",
+        "Lanzarse a nuevas ideas que no han sido planificadas o que requieren un gran desafío",
+        "Si sus jefes son hostiles y cerrados a escuchar",
+        "Sentir que no toman en cuenta al capital humano o las necesidades que tienen los trabajadores",
+        "Si su trabajo es solitario sin interacción social y requiere de mucha concentración y análisis"
+      ]
+    },
+    {
+      "id": 18,
+      "archetype": "SISTEMÁTICO(Cs)",
+      "name": "Sistemático",
+      "code": "Cs",
+      "personality": "El Sistemático busca orden en su vida. Le gusta tener una estructura y metas claras a seguir. Es analítico y se enfoca en la precisión y el detalle. Se siente cómodo trabajando en actividades un poco más técnicas, que sean procedimentales y tenga claro qué debe conseguir de ello. En la interacción, es más reservado y le cuesta involucrarse en conversaciones informales con sus compañeros.",
+      "strengths": [
+        "Trabaja con orden y calidad, le gustan las cosas bien hechas, sigue reglas y protocolos que ya han sido probados antes",
+        "Realiza los proyectos con una visión clara y con determinación, planifica paso a paso las actividades y pone tiempos de finalización",
+        "Es autónomo en su trabajo sin la necesidad de recibir muchas instrucciones",
+        "La información que proporciona es concreta y detallada",
+        "Puede ser objetivo y desconectar sus emociones al momento de tomar decisiones"
+      ],
+      "weaknesses": [
+        "Es desconfiado de las personas desconocidas, y tiende a cuestionar sus opiniones e intenciones",
+        "Puede ser un gran desafío manejar innovaciones que no han sido probadas antes",
+        "Le cuesta entender ideas muy abstractas, fantasiosas o con mucha emocionalidad",
+        "Puede perderse en detalles que no aportan al objetivo final",
+        "Puede sentirse incómodo al trabajar en equipo y ser colaborativo, prefiere trabajar solo"
+      ],
+      "motivators": [
+        "Ser reconocido como un especialista en el campo que desempeña",
+        "Manejar datos numéricos o técnicos",
+        "Tener autonomía y calma para realizar su trabajo, poder analizar todos los puntos antes de tomar decisiones",
+        "Establecer orden y estructura, por ejemplo a través de la redacción de un manual",
+        "Controlar y evaluar los procesos; revisar el trabajo de su grupo, buscando la calidad de los resultados"
+      ],
+      "demotivators": [
+        "Lanzarse a proyectos nuevos donde ocurren muchos imprevistos o existe presión para tomar decisiones",
+        "Tener tareas que requieran de espontaneidad, creatividad o innovación",
+        "Ser el centro de atención de un gran número de personas, tener que interactuar y compartir con cada una de ellos",
+        "Conectarse con las personas, escuchar sus historias y dar aliento motivacional"
+      ]
+    },
+    {
+      "id": 19,
+      "archetype": "TÁCTICO(Dc)",
+      "name": "Táctico",
+      "code": "Dc",
+      "personality": "El Táctico es automotivado, y se mantiene con buena energía para realizar sus tareas. Le gusta planear sus proyectos con anterioridad y estar preparado para los nuevos retos. Se siente motivado por cargos de autoridad donde pueda tomar decisiones y desarrollar sus planes. Suele ser observador y analítico, saca primero sus propias conclusiones antes de confiar en la gente. Su interacción es más seria, y prefiere eventos formales que tengan una conexión con sus intereses personales.",
+      "strengths": [
+        "Tiene un carácter enérgico y decidido cuando persigue una idea",
+        "Quiere crecer, y pone la mirada hacia adelante para conseguir nuevos logros",
+        "Es precavido, cuida de los obstáculos que se pueden presentar en el camino y trata de optimizar el tiempo y los recursos",
+        "Busca información para que sus ideas innovadoras sean comprobables",
+        "Lleva un control de calidad ante el desempeño de su grupo de trabajo, y es exigente en progresar con su rendimiento"
+      ],
+      "weaknesses": [
+        "Puede ser intenso o excesivamente exigente por lograr sus objetivos",
+        "Es poco flexible a las necesidades de su equipo de trabajo, y espera que todos vayan a su ritmo",
+        "Tiende a generar proyectos o tomar decisiones independientemente, por lo cual puede perder otros puntos de vista o pasar por alto detalles importantes",
+        "Sus críticas pueden ser hirientes o incómodas para personas más sensibles"
+      ],
+      "motivators": [
+        "Mantener cargos de autoridad y de evaluación del desempeño, donde pueda controlar los resultados obtenidos",
+        "Cuando sus compañeros de trabajo se ajustan a las reglas y son eficientes, como también, si su comunicación es concreta y lógica",
+        "Tener autonomía en el trabajo para poder optimizar el tiempo y los recursos",
+        "Ser la cabeza de proyectos innovadores, adquirir nuevos retos y resolver problemas"
+      ],
+      "demotivators": [
+        "Trabajar en funciones que no demandan retos, ya sea porque son trabajos operativos o rutinarios",
+        "Trabajar con recursos limitados o personas desorganizadas que no tengan orientación al logro o motivación de crecimiento",
+        "Enseñar a otros y capacitar a sus compañeros, ponerles ejemplos detallados de cada paso",
+        "Tener que permanecer en silencio cuando no está de acuerdo con algo",
+        "Escuchar las necesidades de su equipo, estar en muchas reuniones o tomar decisiones colaborativas"
+      ]
+    }
+  ],
+  "validation": {
+    "archetypes_count": 19,
+    "warnings": []
+  }
+}

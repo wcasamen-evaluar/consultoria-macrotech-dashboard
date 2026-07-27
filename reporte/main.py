@@ -1,103 +1,129 @@
-"""
-main.py
-=======
-Orquestador principal del generador de informes de Evaluación 360°.
-Evaluar.com / Grupo Centrico — Consultoría Macrotech
+"""Orquestador del generador de informes integrales.
 
-Uso:
-    python main.py
+Uso desde la raiz del proyecto:
 
-Espera:
-    - datos/*.xlsx      : archivo exportado de Evaluar.com
-    - output/           : carpeta donde se guardan los PDFs (se crea sola)
+    python reporte/main.py
 
-Configuración:
-    Edita la sección CONFIGURACIÓN más abajo antes de ejecutar.
+Por defecto usa el mismo Excel raiz del dashboard y genera un PDF de
+prueba para el primer colaborador en reporte/output/.
 """
 
+from __future__ import annotations
+
+import argparse
+import re
 import sys
-from pathlib import Path
+import unicodedata
 from datetime import datetime
+from pathlib import Path
 
-# Asegurar que los módulos hermanos sean importables
 sys.path.insert(0, str(Path(__file__).parent))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-import calculos
 import generar_pdf
+import integrado
 
 
-# ---------------------------------------------------------------------------
-# CONFIGURACIÓN — editar antes de ejecutar
-# ---------------------------------------------------------------------------
-
-CLIENTE  = "Macrotech"
-PROCESO  = "Evaluación de Desempeño 360°"
-FECHA    = datetime.now().strftime("%d/%m/%Y")   # o escribe: "Mayo 2025"
-
-CARPETA_DATOS  = Path("datos")
-CARPETA_OUTPUT = Path("output")
-
-# ---------------------------------------------------------------------------
+CLIENTE = "Macrotech"
+PROCESO = "Evaluacion de Desempeno 360"
+FECHA = datetime.now().strftime("%d/%m/%Y")
+CARPETA_OUTPUT = Path(__file__).parent / "output"
 
 
-def main():
+def _slug(nombre: str) -> str:
+    texto = unicodedata.normalize("NFKD", nombre)
+    texto = "".join(ch for ch in texto if not unicodedata.combining(ch))
+    texto = re.sub(r"[^a-zA-Z0-9]+", "_", texto).strip("_")
+    return texto or "colaborador"
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Genera informes PDF integrales desde el Excel raiz del dashboard."
+    )
+    parser.add_argument(
+        "--excel",
+        type=Path,
+        default=None,
+        help="Ruta opcional al Excel fuente. Si se omite, usa el Excel raiz del dashboard.",
+    )
+    parser.add_argument(
+        "--output",
+        type=Path,
+        default=CARPETA_OUTPUT,
+        help="Carpeta de salida para los PDFs.",
+    )
+    parser.add_argument(
+        "--limite",
+        type=int,
+        default=1,
+        help="Genera solo los primeros N colaboradores. Por defecto genera 1 para pruebas.",
+    )
+    parser.add_argument(
+        "--todos",
+        action="store_true",
+        help="Genera informes para todos los colaboradores.",
+    )
+    return parser.parse_args()
+
+
+def main() -> None:
+    args = parse_args()
+
     print("=" * 60)
-    print(f"  Evaluar.com — Generador de Informes 360°")
+    print("  Evaluar.com - Generador de Informes Integrales")
     print(f"  Cliente : {CLIENTE}")
     print(f"  Proceso : {PROCESO}")
     print(f"  Fecha   : {FECHA}")
     print("=" * 60)
 
-    # Buscar Excel
-    excels = list(CARPETA_DATOS.glob("*.xlsx"))
-    if not excels:
-        print(f"\nERROR: No se encontró ningún .xlsx en '{CARPETA_DATOS}/'")
+    try:
+        base = integrado.cargar_base_reportes(args.excel)
+    except Exception as exc:
+        print(f"\nERROR: no se pudo cargar la base del dashboard: {exc}")
         sys.exit(1)
-    if len(excels) > 1:
-        print(f"  ⚠  Se encontraron {len(excels)} archivos. Se usará: {excels[0].name}")
 
-    ruta_excel = excels[0]
-    print(f"\nLeyendo: {ruta_excel}")
+    reportes = base["reportes"]
+    print(f"\nExcel fuente     : {base['ruta_excel']}")
+    print(f"Colaboradores    : {len(reportes)}")
+    print(f"Potencial        : {base['res_potencial']['resumen']['evaluados']} evaluados")
+    print(f"Objetivos        : {base['res_objetivos']['resumen']['colaboradores']} colaboradores")
+    print(f"Integrados       : {int(base['df_integrado']['integrada'].notna().sum())} colaboradores")
 
-    # Leer y calcular
-    df = calculos.leer_excel(ruta_excel)
-    print(f"Filas válidas    : {len(df)}")
-    print(f"Colaboradores    : {df['nombre_colaborador'].nunique()}")
-    print()
+    args.output.mkdir(parents=True, exist_ok=True)
 
-    resultados = calculos.calcular_todos(df)
-
-    # Crear carpeta de salida
-    CARPETA_OUTPUT.mkdir(exist_ok=True)
-
-    # Generar un PDF por colaborador
-    print()
     errores = []
-    for nombre, resultado in resultados.items():
-        slug = nombre.replace(" ", "_").replace("/", "-")
-        ruta_pdf = CARPETA_OUTPUT / f"Informe_360_{slug}.pdf"
+    items = list(reportes.items())
+    if not args.todos and args.limite:
+        items = items[: args.limite]
 
+    print()
+    for nombre, paquete in items:
+        ruta_pdf = args.output / f"Informe_integral_{_slug(nombre)}.pdf"
         try:
             generar_pdf.generar_pdf(
-                nombre      = nombre,
-                resultado   = resultado,
-                proceso     = PROCESO,
-                cliente     = CLIENTE,
-                fecha       = FECHA,
-                ruta_salida = str(ruta_pdf),
+                nombre=nombre,
+                resultado=paquete["resultado_360"],
+                proceso=PROCESO,
+                cliente=CLIENTE,
+                fecha=FECHA,
+                cargo=paquete["ficha"].get("cargo", ""),
+                area=paquete["ficha"].get("area", ""),
+                ruta_salida=str(ruta_pdf),
+                contexto_integral=paquete,
             )
-        except Exception as e:
-            print(f"  ✗  Error generando PDF para {nombre}: {e}")
-            errores.append((nombre, str(e)))
+        except Exception as exc:
+            print(f"  x  Error generando PDF para {nombre}: {exc}")
+            errores.append((nombre, str(exc)))
 
     print()
     print("=" * 60)
     if errores:
         print(f"  Completado con {len(errores)} error(es):")
         for nombre, err in errores:
-            print(f"    · {nombre}: {err}")
+            print(f"    - {nombre}: {err}")
     else:
-        print(f"  ✓  {len(resultados)} PDF(s) generado(s) en '{CARPETA_OUTPUT}/'")
+        print(f"  OK  {len(items)} PDF(s) generado(s) en '{args.output}/'")
     print("=" * 60)
 
 

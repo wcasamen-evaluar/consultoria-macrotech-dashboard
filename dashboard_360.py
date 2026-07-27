@@ -35,7 +35,7 @@ ARCHIVO_BASE = next(
     Path(__file__).parent.glob("Fase_I_Evaluaci*n_360__180__90__copia_.xlsx"),
     Path(__file__).with_name("Fase_I_Evaluación_360__180__90__copia_.xlsx"),
 )
-VERSION_CARGA_BASE = 3
+VERSION_CARGA_BASE = 4
 VERSION_CARGA_DB = 2
 
 # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
@@ -101,6 +101,35 @@ html, body, [class*="css"] {
     padding: 4px 14px;
     border-radius: 20px;
     font-weight: 500;
+}
+.ev-client-logos {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    flex-wrap: wrap;
+    min-width: 0;
+}
+.ev-client-logo {
+    height: 42px;
+    width: auto;
+    max-width: 210px;
+    object-fit: contain;
+    padding: 2px 0;
+}
+@media (max-width: 900px) {
+    .ev-topbar {
+        align-items: flex-start;
+        gap: 12px;
+        flex-direction: column;
+    }
+    .ev-client-logos {
+        justify-content: flex-start;
+    }
+    .ev-client-logo {
+        height: 34px;
+        max-width: 165px;
+    }
 }
 
 /* KPI cards */
@@ -515,17 +544,30 @@ def escala_objetivos_label(v: float) -> str:
     return "Desempeño insatisfactorio"
 
 
-POTENCIAL_ESCALAS = ["Ajustado al perfil", "Cercano al perfil", "Alejado al perfil"]
+POTENCIAL_ESCALAS = ["Potencial Alto", "Potencial Medio", "Potencial Bajo"]
 POTENCIAL_COLORES = {
-    "Ajustado al perfil": "#36a65c",
-    "Cercano al perfil": "#f0c419",
-    "Alejado al perfil": "#d94a45",
+    "Potencial Alto": "#36a65c",
+    "Potencial Medio": "#f0c419",
+    "Potencial Bajo": "#d94a45",
 }
 DISC_PALETA = [
     "#185fa5", "#1d9e75", "#e6a700", "#d95f59", "#7c5cc4",
     "#285b78", "#f47c3c", "#6c3fc5", "#2f9f8f", "#b64e82",
 ]
 IQ_PALETA = ["#285b78", "#3f7ee8", "#1d9e75", "#e6a700", "#f47c3c", "#d95f59", "#7c5cc4"]
+
+
+def escala_potencial_label(valor: object) -> str:
+    puntaje = pd.to_numeric(pd.Series([valor]), errors="coerce").iloc[0]
+    if pd.isna(puntaje):
+        return ""
+    if puntaje >= 85:
+        return "Potencial Alto"
+    if puntaje >= 70:
+        return "Potencial Medio"
+    return "Potencial Bajo"
+
+
 CURVA_DESARROLLO_DESCRIPCIONES = {
     10: "Extremadamente desarrollada",
     9: "Muy desarrollada",
@@ -1179,16 +1221,42 @@ def normalizar_nombre_match(nombre: object) -> str:
     return re.sub(r"\s+", " ", texto)
 
 
+def normalizar_correo(correo: object) -> str:
+    if correo is None or pd.isna(correo):
+        return ""
+    return str(correo).strip().casefold()
+
+
+def valor_limpio(valor: object) -> str:
+    if valor is None or pd.isna(valor):
+        return ""
+    texto = reparar_texto(valor)
+    return "" if texto.casefold() in {"", "nan", "none", "n/a", "na", "-"} else texto
+
+
 def preparar_ninebox(df_360_global: pd.DataFrame, df_potencial: pd.DataFrame) -> pd.DataFrame:
-    desempeno = df_360_global[["colaborador", "global"]].copy()
-    potencial = df_potencial[["colaborador", "evaluacion_potencial"]].copy()
-    desempeno["match_nombre"] = desempeno["colaborador"].map(normalizar_nombre_match)
-    potencial["match_nombre"] = potencial["colaborador"].map(normalizar_nombre_match)
-    desempeno = desempeno.drop_duplicates("match_nombre")
-    potencial = potencial.drop_duplicates("match_nombre")
+    desempeno_cols = ["colaborador", "global"] + [
+        col for col in ["email_colaborador", "correo"] if col in df_360_global.columns
+    ]
+    desempeno = df_360_global[desempeno_cols].copy()
+    potencial = df_potencial[
+        [col for col in ["colaborador", "evaluacion_potencial", "correo", "correo_potencial", "correo_instancia"] if col in df_potencial.columns]
+    ].copy()
+    desempeno = expandir_llaves_match(
+        desempeno,
+        ["email_colaborador", "correo"],
+        "colaborador",
+        desempeno_cols,
+    )
+    potencial = expandir_llaves_match(
+        potencial,
+        ["correo", "correo_potencial", "correo_instancia"],
+        "colaborador",
+        list(potencial.columns),
+    )
     merged = desempeno.merge(
         potencial,
-        on="match_nombre",
+        on="match_key",
         how="inner",
         suffixes=("_360", "_potencial"),
     )
@@ -1198,7 +1266,173 @@ def preparar_ninebox(df_360_global: pd.DataFrame, df_potencial: pd.DataFrame) ->
         "global": "desempeno_360",
         "evaluacion_potencial": "potencial",
     })
-    return merged[["colaborador", "match_nombre", "potencial", "desempeno_360"]].sort_values("colaborador")
+    merged = merged.drop_duplicates("colaborador")
+    return merged[["colaborador", "match_key", "potencial", "desempeno_360"]].sort_values("colaborador")
+
+
+def construir_indice_colaboradores(res_360: dict, res_potencial: dict, res_objetivos: dict) -> pd.DataFrame:
+    registros: dict[str, dict] = {}
+    alias_correo: dict[str, str] = {}
+
+    def upsert(correos: object, colaborador: object, **campos: object) -> None:
+        if isinstance(correos, (list, tuple, set)):
+            correos_lista = list(correos)
+        else:
+            correos_lista = [correos]
+        correo_keys = [normalizar_correo(correo) for correo in correos_lista]
+        correo_keys = [correo for correo in dict.fromkeys(correo_keys) if correo]
+        nombre = valor_limpio(colaborador)
+        nombre_key = normalizar_nombre_match(nombre)
+        if not correo_keys and not nombre_key:
+            return
+
+        key = next((alias_correo[correo] for correo in correo_keys if correo in alias_correo), None)
+        if key is None:
+            key = f"correo::{correo_keys[0]}" if correo_keys else f"nombre::{nombre_key}"
+
+        actual = registros.setdefault(
+            key,
+            {
+                "correo_key": correo_keys[0] if correo_keys else "",
+                "correo_potencial_key": "",
+                "correo_instancia_key": "",
+                "colaborador_key": nombre_key,
+                "correo": valor_limpio(correos_lista[0]) if correos_lista else "",
+                "correo_potencial": "",
+                "correo_instancia": "",
+                "colaborador": nombre,
+                "empresa": "",
+                "cargo": "",
+                "jefe": "",
+                "pais": "",
+                "area": "",
+                "grupo": "",
+            },
+        )
+        for correo_key in correo_keys:
+            alias_correo[correo_key] = key
+        if correo_keys and not actual.get("correo_key"):
+            actual["correo_key"] = correo_keys[0]
+        if nombre_key and not actual.get("colaborador_key"):
+            actual["colaborador_key"] = nombre_key
+        if correos_lista and valor_limpio(correos_lista[0]) and not actual.get("correo"):
+            actual["correo"] = valor_limpio(correos_lista[0])
+        if nombre and not actual.get("colaborador"):
+            actual["colaborador"] = nombre
+        for campo, valor in campos.items():
+            limpio = valor_limpio(valor)
+            if limpio and not actual.get(campo):
+                actual[campo] = limpio
+
+    df_potencial = res_potencial.get("df_personas", pd.DataFrame())
+    if not df_potencial.empty:
+        for _, fila in df_potencial.iterrows():
+            upsert(
+                [fila.get("correo"), fila.get("correo_potencial"), fila.get("correo_instancia")],
+                fila.get("colaborador"),
+                correo_potencial=fila.get("correo_potencial"),
+                correo_instancia=fila.get("correo_instancia"),
+                empresa=fila.get("empresa"),
+                cargo=fila.get("cargo"),
+                jefe=fila.get("jefe"),
+                pais=fila.get("pais"),
+                area=fila.get("area"),
+                grupo=fila.get("grupo"),
+            )
+
+    df_obj = res_objetivos.get("df_colaboradores", pd.DataFrame())
+    if not df_obj.empty:
+        for _, fila in df_obj.iterrows():
+            upsert(
+                fila.get("email_colaborador"),
+                fila.get("colaborador"),
+                cargo=fila.get("cargo_objetivo"),
+                jefe=fila.get("jefe"),
+            )
+
+    df_360 = res_360.get("df_fuente", pd.DataFrame())
+    if not df_360.empty and {"email_colaborador", "nombre_colaborador"}.issubset(df_360.columns):
+        for _, fila in df_360[["email_colaborador", "nombre_colaborador"]].drop_duplicates().iterrows():
+            upsert(fila.get("email_colaborador"), fila.get("nombre_colaborador"))
+
+    for registro in registros.values():
+        registro["correo_potencial_key"] = normalizar_correo(registro.get("correo_potencial"))
+        registro["correo_instancia_key"] = normalizar_correo(registro.get("correo_instancia"))
+
+    columnas = [
+        "correo_key", "correo_potencial_key", "correo_instancia_key",
+        "colaborador_key", "correo", "correo_potencial", "correo_instancia",
+        "colaborador", "empresa", "cargo", "jefe", "pais", "area", "grupo",
+    ]
+    if not registros:
+        return pd.DataFrame(columns=columnas)
+    return pd.DataFrame(registros.values()).reindex(columns=columnas).sort_values("colaborador", kind="stable").reset_index(drop=True)
+
+
+def filtrar_indice_global(indice: pd.DataFrame, filtros: dict[str, list[str]]) -> pd.DataFrame:
+    filtrado = indice.copy()
+    for columna, seleccion in filtros.items():
+        if seleccion and columna in filtrado.columns:
+            filtrado = filtrado[filtrado[columna].isin(seleccion)]
+    return filtrado
+
+
+def filtrar_por_universo(
+    df: pd.DataFrame,
+    correos: set[str],
+    nombres: set[str],
+    col_correo: str | list[str] | None = None,
+    col_nombre: str | None = None,
+) -> pd.DataFrame:
+    if df.empty:
+        return df.copy()
+    mascaras = []
+    columnas_correo = []
+    if isinstance(col_correo, str):
+        columnas_correo = [col_correo]
+    elif isinstance(col_correo, list):
+        columnas_correo = col_correo
+    for columna in columnas_correo:
+        if columna in df.columns and correos:
+            mascaras.append(df[columna].map(normalizar_correo).isin(correos))
+    if col_nombre and col_nombre in df.columns and nombres:
+        mascaras.append(df[col_nombre].map(normalizar_nombre_match).isin(nombres))
+    if not mascaras:
+        return df.iloc[0:0].copy()
+    mascara = mascaras[0]
+    for extra in mascaras[1:]:
+        mascara = mascara | extra
+    return df[mascara].copy()
+
+
+def expandir_llaves_match(
+    df: pd.DataFrame,
+    columnas_correo: list[str],
+    columna_nombre: str,
+    columnas_salida: list[str],
+) -> pd.DataFrame:
+    registros = []
+    if df.empty:
+        return pd.DataFrame(columns=["match_key", *columnas_salida])
+    for _, fila in df.iterrows():
+        keys = []
+        for columna in columnas_correo:
+            if columna in df.columns:
+                correo = normalizar_correo(fila.get(columna))
+                if correo:
+                    keys.append(f"email::{correo}")
+        if columna_nombre in df.columns:
+            nombre = normalizar_nombre_match(fila.get(columna_nombre))
+            if nombre:
+                keys.append(f"nombre::{nombre}")
+        for key in dict.fromkeys(keys):
+            registro = {"match_key": key}
+            for columna in columnas_salida:
+                registro[columna] = fila.get(columna)
+            registros.append(registro)
+    if not registros:
+        return pd.DataFrame(columns=["match_key", *columnas_salida])
+    return pd.DataFrame(registros).drop_duplicates("match_key")
 
 
 def cortes_ninebox(df_ninebox: pd.DataFrame) -> dict:
@@ -1334,7 +1568,124 @@ def calcular(df: pd.DataFrame, weights: dict) -> dict:
     """Calcula el dashboard usando el motor compartido del proyecto."""
     res = motor_360.calcular_dashboard(df, weights)
     res["df_global"]["escala"] = res["df_global"]["escala_idx"].apply(lambda i: ESCALA_LABELS[i])
+    if {"nombre_colaborador", "email_colaborador"}.issubset(df.columns):
+        correos_360 = (
+            df[["nombre_colaborador", "email_colaborador"]]
+            .dropna(subset=["nombre_colaborador"])
+            .drop_duplicates("nombre_colaborador")
+            .rename(columns={"nombre_colaborador": "colaborador"})
+        )
+        res["df_global"] = res["df_global"].merge(correos_360, on="colaborador", how="left")
     return res
+
+
+def resultado_360_vacio(df_fuente: pd.DataFrame) -> dict:
+    tipos_activos = {t: w for t, w in PESOS_PONDERACION.items() if w > 0}
+    return {
+        "ciclo": "Evaluacion 360",
+        "resumen_fuente": {
+            "filas": 0,
+            "colaboradores": 0,
+            "competencias": 0,
+            "items": 0,
+            "preguntas_abiertas_omitidas": 0,
+        },
+        "df_global": pd.DataFrame(columns=["colaborador", "global", "escala_idx", "escala", "email_colaborador"]),
+        "df_comp": pd.DataFrame(
+            columns=["colaborador", "competencia", "puntaje"]
+            + [f"tipo_{tipo}" for tipo in tipos_activos]
+        ),
+        "df_comp_prom": pd.DataFrame(columns=["competencia", "prom_comp"]),
+        "rel_prom": {},
+        "comp_rel": {},
+        "df_items": pd.DataFrame(columns=["competencia", "item", "puntaje"]),
+        "df_fuente": df_fuente.iloc[0:0].copy(),
+        "tipos_activos": tipos_activos,
+        "colaboradores": [],
+        "competencias": [],
+    }
+
+
+def recalcular_360_filtrado(df_fuente: pd.DataFrame) -> dict:
+    if df_fuente.empty:
+        return resultado_360_vacio(df_fuente)
+    try:
+        return calcular(df_fuente, PESOS_PONDERACION)
+    except ValueError:
+        return resultado_360_vacio(df_fuente)
+
+
+def resumen_potencial_filtrado(df_personas: pd.DataFrame, df_competencias: pd.DataFrame, catalogo: list[str]) -> dict:
+    return {
+        "personas": len(df_personas),
+        "evaluados": int(df_personas["evaluacion_potencial"].notna().sum()) if "evaluacion_potencial" in df_personas else 0,
+        "sin_evaluacion": int(df_personas["evaluacion_potencial"].isna().sum()) if "evaluacion_potencial" in df_personas else 0,
+        "con_potencial_2025": int(df_personas["potencial_2025"].notna().sum()) if "potencial_2025" in df_personas else 0,
+        "con_disc": int(df_personas["disc"].notna().sum()) if "disc" in df_personas else 0,
+        "con_iq": int(df_personas["iq"].notna().sum()) if "iq" in df_personas else 0,
+        "competencias_catalogo": len(catalogo),
+        "competencias_con_datos": int(df_competencias["competencia"].nunique()) if "competencia" in df_competencias else 0,
+    }
+
+
+def recalcular_objetivos_desde_fuente(df_fuente: pd.DataFrame) -> dict:
+    if df_fuente.empty:
+        return motor_objetivos._vacio()
+
+    df = df_fuente.copy()
+    if "puntaje" not in df.columns and "calificacion_porcentaje" in df.columns:
+        df["puntaje"] = pd.to_numeric(df["calificacion_porcentaje"], errors="coerce").clip(0, 100)
+    if "cargo_objetivo" not in df.columns and "nombre_seccion" in df.columns:
+        df["cargo_objetivo"] = df["nombre_seccion"]
+    if "objetivo" not in df.columns and "pregunta_texto" in df.columns:
+        df["objetivo"] = df["pregunta_texto"]
+    df_colaboradores = (
+        df.groupby(["nombre_colaborador", "email_colaborador"], dropna=False)
+        .agg(
+            puntaje=("puntaje", "mean"),
+            objetivos=("objetivo", "nunique"),
+            cargo_objetivo=("cargo_objetivo", lambda valores: " / ".join(sorted(set(map(str, valores.dropna()))))),
+            jefe=("nombre_evaluador", lambda valores: " / ".join(sorted(set(map(str, valores.dropna()))))),
+        )
+        .reset_index()
+        .rename(columns={"nombre_colaborador": "colaborador"})
+        .sort_values("puntaje", ascending=False)
+    )
+    df_cargos = (
+        df.groupby("cargo_objetivo", dropna=False)
+        .agg(
+            puntaje=("puntaje", "mean"),
+            colaboradores=("nombre_colaborador", "nunique"),
+            objetivos=("objetivo", "nunique"),
+        )
+        .reset_index()
+        .sort_values("puntaje", ascending=False)
+    )
+    df_objetivos = (
+        df.groupby(["cargo_objetivo", "objetivo"], dropna=False)
+        .agg(
+            puntaje=("puntaje", "mean"),
+            colaboradores=("nombre_colaborador", "nunique"),
+        )
+        .reset_index()
+        .sort_values("puntaje", ascending=False)
+    )
+    resumen = {
+        "filas": len(df),
+        "colaboradores": int(df["nombre_colaborador"].nunique()),
+        "jefes": int(df["nombre_evaluador"].nunique()),
+        "cargos": int(df["cargo_objetivo"].nunique()),
+        "objetivos": int(df["objetivo"].nunique()),
+        "promedio": float(df_colaboradores["puntaje"].mean()) if len(df_colaboradores) else 0.0,
+        "ciclo": str(df["nombre_ciclo"].dropna().iloc[0]) if df["nombre_ciclo"].notna().any() else "Objetivos",
+    }
+    return {
+        "df_fuente": df,
+        "df_colaboradores": df_colaboradores,
+        "df_cargos": df_cargos,
+        "df_objetivos": df_objetivos,
+        "resumen": resumen,
+    }
 
 
 def leer_config_app(clave: str, default=None):
@@ -1845,29 +2196,6 @@ def fig_objetivos_bullet(promedio: float) -> go.Figure:
         paper_bgcolor="white",
         font_family="DM Sans",
     )
-    fig.add_shape(
-        type="line",
-        xref="paper",
-        yref="paper",
-        x0=centro_x,
-        y0=centro_y,
-        x1=punta_x,
-        y1=punta_y,
-        line=dict(color="#1a1a3e", width=3),
-        layer="above",
-    )
-    fig.add_shape(
-        type="circle",
-        xref="paper",
-        yref="paper",
-        x0=centro_x - 0.012,
-        y0=centro_y - 0.012,
-        x1=centro_x + 0.012,
-        y1=centro_y + 0.012,
-        fillcolor="#1a1a3e",
-        line=dict(color="#1a1a3e", width=0),
-        layer="above",
-    )
     return fig
 
 
@@ -2079,28 +2407,50 @@ def preparar_resultado_integrado(
     df_potencial: pd.DataFrame,
     df_obj_fuente: pd.DataFrame,
 ) -> pd.DataFrame:
-    base_360 = df_360_global[["colaborador", "global"]].rename(
+    base_360_cols = ["colaborador", "global"] + [
+        col for col in ["email_colaborador", "correo"] if col in df_360_global.columns
+    ]
+    base_360 = df_360_global[base_360_cols].rename(
         columns={"colaborador": "colaborador_360", "global": "evd_360"}
     ).copy()
-    base_obj = df_obj_colab[["colaborador", "puntaje", "cargo_objetivo", "jefe"]].rename(
+    base_obj_cols = [col for col in ["colaborador", "email_colaborador", "puntaje", "cargo_objetivo", "jefe"] if col in df_obj_colab.columns]
+    base_obj = df_obj_colab[base_obj_cols].rename(
         columns={"colaborador": "colaborador_obj", "puntaje": "objetivos"}
     ).copy()
     base_pot = df_potencial[
-        [col for col in ["colaborador", "evaluacion_potencial", "empresa", "pais", "grupo"] if col in df_potencial.columns]
+        [
+            col for col in [
+                "colaborador", "correo", "correo_potencial", "correo_instancia",
+                "evaluacion_potencial", "empresa", "pais", "grupo", "cargo", "area", "jefe"
+            ]
+            if col in df_potencial.columns
+        ]
     ].rename(columns={"colaborador": "colaborador_pot", "evaluacion_potencial": "potencial"}).copy()
 
-    for df, col_nombre in [
-        (base_360, "colaborador_360"),
-        (base_obj, "colaborador_obj"),
-        (base_pot, "colaborador_pot"),
-    ]:
-        df["match_nombre"] = df[col_nombre].map(normalizar_nombre_match)
-        df.drop_duplicates("match_nombre", inplace=True)
+    base_360 = expandir_llaves_match(
+        base_360,
+        ["email_colaborador", "correo"],
+        "colaborador_360",
+        list(base_360.columns),
+    )
+    base_obj = expandir_llaves_match(
+        base_obj,
+        ["email_colaborador"],
+        "colaborador_obj",
+        list(base_obj.columns),
+    )
+    base_pot = expandir_llaves_match(
+        base_pot,
+        ["correo", "correo_potencial", "correo_instancia"],
+        "colaborador_pot",
+        list(base_pot.columns),
+    )
 
-    integrado = base_360.merge(base_obj, on="match_nombre", how="outer")
-    integrado = integrado.merge(base_pot, on="match_nombre", how="outer")
+    integrado = base_360.merge(base_obj, on="match_key", how="outer")
+    integrado = integrado.merge(base_pot, on="match_key", how="outer")
     integrado["colaborador"] = integrado["colaborador_360"].combine_first(integrado["colaborador_obj"])
     integrado["colaborador"] = integrado["colaborador"].combine_first(integrado["colaborador_pot"])
+    integrado = integrado.drop_duplicates("colaborador")
 
     evaluadores = set(df_obj_fuente["nombre_evaluador"].dropna().map(normalizar_nombre_match)) if not df_obj_fuente.empty else set()
     integrado["gente_a_cargo"] = integrado["colaborador"].map(
@@ -2409,6 +2759,23 @@ def render_resultado_integrado_tipo(
         st.markdown(html, unsafe_allow_html=True)
 
 
+def imagen_data_uri(ruta: str | Path) -> str | None:
+    path = Path(ruta)
+    if not path.exists():
+        return None
+
+    mime_por_extension = {
+        ".png": "image/png",
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
+        ".svg": "image/svg+xml",
+        ".webp": "image/webp",
+    }
+    mime = mime_por_extension.get(path.suffix.lower(), "application/octet-stream")
+    data_b64 = base64.b64encode(path.read_bytes()).decode("ascii")
+    return f"data:{mime};base64,{data_b64}"
+
+
 # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # SIDEBAR
 requerir_login()
@@ -2418,6 +2785,23 @@ try:
 except Exception as exc:
     st.error(f"No se pudo cargar la base del dashboard: {exc}")
     st.stop()
+
+indice_global = construir_indice_colaboradores(res, res_potencial, res_objetivos)
+
+FILTROS_GLOBALES_KEYS = [
+    "filtro_global_empresa",
+    "filtro_global_cargo",
+    "filtro_global_jefe",
+    "filtro_global_pais",
+    "filtro_global_area",
+    "filtro_global_grupo",
+]
+
+
+def limpiar_filtros_globales() -> None:
+    for key in FILTROS_GLOBALES_KEYS:
+        st.session_state[key] = []
+
 
 with st.sidebar:
     # Logo: leer SVG y embeber como HTML para que funcione sobre fondo oscuro
@@ -2452,6 +2836,72 @@ with st.sidebar:
 
     st.markdown('<div class="ev-sidebar-accent"></div>', unsafe_allow_html=True)
 
+    st.markdown("**Filtros globales**")
+    opciones_globales = {
+        col: sorted(indice_global[col].dropna().loc[indice_global[col].dropna() != ""].unique().tolist())
+        if col in indice_global.columns else []
+        for col in ["empresa", "cargo", "jefe", "pais", "area", "grupo"]
+    }
+    filtro_global_empresa = st.multiselect(
+        "Empresa",
+        opciones_globales["empresa"],
+        key="filtro_global_empresa",
+        placeholder="Todas",
+    )
+    filtro_global_cargo = st.multiselect(
+        "Cargo",
+        opciones_globales["cargo"],
+        key="filtro_global_cargo",
+        placeholder="Todos",
+    )
+    filtro_global_jefe = st.multiselect(
+        "Jefe",
+        opciones_globales["jefe"],
+        key="filtro_global_jefe",
+        placeholder="Todos",
+    )
+    filtro_global_pais = st.multiselect(
+        "País",
+        opciones_globales["pais"],
+        key="filtro_global_pais",
+        placeholder="Todos",
+    )
+    filtro_global_area = st.multiselect(
+        "Área",
+        opciones_globales["area"],
+        key="filtro_global_area",
+        placeholder="Todas",
+    )
+    filtro_global_grupo = st.multiselect(
+        "Grupo",
+        opciones_globales["grupo"],
+        key="filtro_global_grupo",
+        placeholder="Todos",
+    )
+    filtros_globales = {
+        "empresa": filtro_global_empresa,
+        "cargo": filtro_global_cargo,
+        "jefe": filtro_global_jefe,
+        "pais": filtro_global_pais,
+        "area": filtro_global_area,
+        "grupo": filtro_global_grupo,
+    }
+    hay_filtros_globales = any(filtros_globales.values())
+    indice_global_filtrado = filtrar_indice_global(indice_global, filtros_globales)
+    st.markdown(
+        f'<div style="font-size:11px;color:rgba(255,255,255,0.65);line-height:1.4">'
+        f'Universo activo: {len(indice_global_filtrado):,} colaboradores</div>',
+        unsafe_allow_html=True,
+    )
+    if hay_filtros_globales:
+        st.button(
+            "Limpiar filtros globales",
+            use_container_width=True,
+            on_click=limpiar_filtros_globales,
+        )
+
+    st.markdown('<div class="ev-sidebar-accent"></div>', unsafe_allow_html=True)
+
     # Pesos activos - solo lectura
     st.markdown("**Pesos de ponderaci\u00f3n activos**")
     for tipo, peso in PESOS_PONDERACION.items():
@@ -2465,6 +2915,61 @@ with st.sidebar:
         )
 
     st.markdown('<div class="ev-sidebar-accent"></div>', unsafe_allow_html=True)
+
+
+if hay_filtros_globales:
+    correos_globales = set()
+    for columna_correo in ["correo_key", "correo_potencial_key", "correo_instancia_key"]:
+        if columna_correo in indice_global_filtrado.columns:
+            correos_globales.update(
+                indice_global_filtrado[columna_correo]
+                .dropna()
+                .loc[indice_global_filtrado[columna_correo] != ""]
+                .tolist()
+            )
+    nombres_globales = set(
+        indice_global_filtrado["colaborador_key"].dropna().loc[indice_global_filtrado["colaborador_key"] != ""]
+    )
+
+    df_360_filtrado = filtrar_por_universo(
+        res["df_fuente"],
+        correos_globales,
+        nombres_globales,
+        col_correo="email_colaborador",
+        col_nombre="nombre_colaborador",
+    )
+    res = recalcular_360_filtrado(df_360_filtrado)
+
+    df_pot_personas = filtrar_por_universo(
+        res_potencial["df_personas"],
+        correos_globales,
+        nombres_globales,
+        col_correo=["correo", "correo_potencial", "correo_instancia"],
+        col_nombre="colaborador",
+    )
+    df_pot_competencias = filtrar_por_universo(
+        res_potencial["df_competencias"],
+        correos_globales,
+        nombres_globales,
+        col_correo=["correo", "correo_potencial", "correo_instancia"],
+        col_nombre="colaborador",
+    )
+    catalogo_competencias = res_potencial.get("catalogo_competencias", [])
+    res_potencial = {
+        **res_potencial,
+        "df_personas": df_pot_personas,
+        "df_competencias": df_pot_competencias,
+        "resumen": resumen_potencial_filtrado(df_pot_personas, df_pot_competencias, catalogo_competencias),
+    }
+
+    df_obj_filtrado = filtrar_por_universo(
+        res_objetivos["df_fuente"],
+        correos_globales,
+        nombres_globales,
+        col_correo="email_colaborador",
+        col_nombre="nombre_colaborador",
+    )
+    res_objetivos = recalcular_objetivos_desde_fuente(df_obj_filtrado)
 
 
 # DASHBOARD
@@ -2484,11 +2989,26 @@ except FileNotFoundError:
     )
 
 ciclo_limpio = str(res.get("ciclo", ""))
+logos_cliente = [
+    ("Macrotech", Path("logos") / "Logo Horizontal Macrotech blanco.png"),
+    ("CIMER", Path("logos") / "Logo CIMER blanco, horizontal.png"),
+    ("CAI", Path("logos") / "Logo-CAI-blanco,-horizontal.png"),
+]
+logos_cliente_html = "".join(
+    f'<img class="ev-client-logo" src="{uri}" alt="{html_lib.escape(nombre)}">'
+    for nombre, ruta in logos_cliente
+    if (uri := imagen_data_uri(ruta))
+)
+if not logos_cliente_html:
+    logos_cliente_html = (
+        f'<span class="ev-cycle">Fase I - Evaluaci\u00f3n 360 - '
+        f'{html_lib.escape(ciclo_limpio)}</span>'
+    )
 
 st.markdown(f"""
 <div class="ev-topbar">
     <div style="display:flex;align-items:center">{logo_html}</div>
-    <span class="ev-cycle">Fase I - Evaluaci\u00f3n 360 - {ciclo_limpio}</span>
+    <div class="ev-client-logos">{logos_cliente_html}</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -2546,25 +3066,38 @@ if fase_activa == "fase1":
         </div>
         """, unsafe_allow_html=True)
 
-        filtro_f1, limpiar_f1 = st.columns([5, 1])
-        with filtro_f1:
+        filtro_col_f1, filtro_nivel_f1, limpiar_f1 = st.columns([3, 2, 1])
+        with filtro_col_f1:
             filtro_colaboradores = st.multiselect(
                 "Colaboradores",
                 options=todos_colaboradores,
                 placeholder="Todos los colaboradores",
                 key="filtro_desempeno_colaboradores",
             )
+        with filtro_nivel_f1:
+            filtro_niveles_desempeno = st.multiselect(
+                "Desempeño",
+                options=ESCALA_LABELS,
+                placeholder="Todos los niveles",
+                key="filtro_desempeno_niveles",
+            )
         with limpiar_f1:
             st.markdown("<div style='height:28px'></div>", unsafe_allow_html=True)
-            if filtro_colaboradores and st.button(
+            filtros_activos_f1 = bool(filtro_colaboradores or filtro_niveles_desempeno)
+            if filtros_activos_f1 and st.button(
                 "Limpiar", key="limpiar_filtro_desempeno", use_container_width=True
             ):
                 st.session_state.filtro_desempeno_colaboradores = []
+                st.session_state.filtro_desempeno_niveles = []
                 st.rerun()
     st.markdown('<div class="sticky-controls-spacer"></div>', unsafe_allow_html=True)
 
-    colabs_activos = filtro_colaboradores if filtro_colaboradores else todos_colaboradores
-    df_global_f = res["df_global"][res["df_global"]["colaborador"].isin(colabs_activos)].copy()
+    df_global_f = res["df_global"].copy()
+    if filtro_colaboradores:
+        df_global_f = df_global_f[df_global_f["colaborador"].isin(filtro_colaboradores)].copy()
+    if filtro_niveles_desempeno:
+        df_global_f = df_global_f[df_global_f["escala"].isin(filtro_niveles_desempeno)].copy()
+    colabs_activos = df_global_f["colaborador"].tolist()
     df_comp_f = res["df_comp"][res["df_comp"]["colaborador"].isin(colabs_activos)].copy()
     df_fuente_f = res["df_fuente"][
         res["df_fuente"]["nombre_colaborador"].isin(colabs_activos)
@@ -2601,9 +3134,9 @@ if fase_activa == "fase1":
                 )
         tipo_labels_pesos_f = etiquetas_tipo_con_pesos(df_comp_f, list(res["tipos_activos"].keys()))
     else:
-        df_comp_prom_f = res["df_comp_prom"]
-        rel_prom_f = res["rel_prom"]
-        comp_rel_f = res["comp_rel"]
+        df_comp_prom_f = pd.DataFrame(columns=["competencia", "prom_comp"])
+        rel_prom_f = {}
+        comp_rel_f = {}
         tipo_labels_pesos_f = TIPO_LABEL
 
     # KPIs de Fase I
@@ -2899,6 +3432,7 @@ if fase_activa == "fase2":
     st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
     resumen_potencial = res_potencial["resumen"]
     df_potencial = res_potencial["df_personas"].copy()
+    df_potencial["nivel_potencial"] = df_potencial["evaluacion_potencial"].map(escala_potencial_label)
 
     with st.container(key="sticky_filtros_potencial"):
         st.markdown("""
@@ -2911,41 +3445,34 @@ if fase_activa == "fase2":
         </div>
         """, unsafe_allow_html=True)
 
-        filtro_pot_1, filtro_pot_2 = st.columns(2)
-        with filtro_pot_1:
+        filtro_pot_col, filtro_pot_nivel = st.columns([3, 2])
+        with filtro_pot_col:
             nombres_potencial = st.multiselect(
                 "Colaboradores",
                 options=sorted(df_potencial["colaborador"].dropna().unique().tolist()),
                 placeholder="Todos los colaboradores",
                 key="filtro_potencial_colaboradores",
             )
-        with filtro_pot_2:
-            jefes_disponibles = sorted(
-                jefe for jefe in df_potencial["jefe"].dropna().unique().tolist()
-                if jefe and not jefe.upper().startswith("N/A")
-            )
-            jefes_potencial = st.multiselect(
-                "Jefes",
-                options=jefes_disponibles,
-                placeholder="Todos los jefes",
-                key="filtro_potencial_jefes",
+        with filtro_pot_nivel:
+            niveles_potencial = st.multiselect(
+                "Nivel de potencial",
+                options=POTENCIAL_ESCALAS,
+                placeholder="Todos los niveles",
+                key="filtro_potencial_niveles",
             )
     st.markdown('<div class="sticky-controls-spacer"></div>', unsafe_allow_html=True)
 
     if nombres_potencial:
         df_potencial = df_potencial[df_potencial["colaborador"].isin(nombres_potencial)]
-    if jefes_potencial:
-        df_potencial = df_potencial[df_potencial["jefe"].isin(jefes_potencial)]
+    if niveles_potencial:
+        df_potencial = df_potencial[df_potencial["nivel_potencial"].isin(niveles_potencial)]
 
     df_potencial_evaluado = df_potencial[df_potencial["evaluacion_potencial"].notna()].copy()
     df_valores_potencial = res_potencial["df_competencias"].copy()
-    if nombres_potencial:
+    colabs_potencial_activos = df_potencial["colaborador"].dropna().unique().tolist()
+    if nombres_potencial or niveles_potencial:
         df_valores_potencial = df_valores_potencial[
-            df_valores_potencial["colaborador"].isin(nombres_potencial)
-        ]
-    if jefes_potencial:
-        df_valores_potencial = df_valores_potencial[
-            df_valores_potencial["jefe"].isin(jefes_potencial)
+            df_valores_potencial["colaborador"].isin(colabs_potencial_activos)
         ]
 
     sub_f2_res, sub_f2_pot, sub_f2_disc, sub_f2_iq, sub_f2_curvas = st.tabs([
@@ -2964,11 +3491,12 @@ if fase_activa == "fase2":
             </div>""", unsafe_allow_html=True)
         with kpi_pot_2:
             promedio_texto = f"{promedio_potencial:.2f}" if pd.notna(promedio_potencial) else "&mdash;"
+            promedio_nivel = escala_potencial_label(promedio_potencial) if pd.notna(promedio_potencial) else "&mdash;"
             st.markdown(f"""
             <div class="kpi-card">
                 <div class="kpi-label">Evaluaci\u00f3n de potencial</div>
                 <div class="kpi-value green">{promedio_texto}</div>
-                <div class="kpi-sub">promedio 2026</div>
+                <div class="kpi-sub">{promedio_nivel}</div>
             </div>""", unsafe_allow_html=True)
 
         st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
@@ -2977,34 +3505,18 @@ if fase_activa == "fase2":
         else:
             medidor_1, medidor_2 = st.columns(2)
             with medidor_1:
-                st.markdown("**Escala benchmark externo**")
+                st.markdown("**Resultado global de potencial**")
                 st.plotly_chart(
                     fig_medidor_potencial(promedio_potencial, (70, 85)),
                     use_container_width=True,
-                    key="potencial_medidor_benchmark",
+                    key="potencial_medidor_global",
                 )
             with medidor_2:
-                st.markdown("**Escala propia**")
+                st.markdown("**Distribuci\u00f3n por nivel de potencial**")
                 st.plotly_chart(
-                    fig_medidor_potencial(promedio_potencial, (82, 98)),
+                    fig_escala_potencial(df_potencial_evaluado, "nivel_potencial"),
                     use_container_width=True,
-                    key="potencial_medidor_propio",
-                )
-
-            escala_1, escala_2 = st.columns(2)
-            with escala_1:
-                st.markdown("**Distribucion benchmark externo**")
-                st.plotly_chart(
-                    fig_escala_potencial(df_potencial_evaluado, "escala_benchmark"),
-                    use_container_width=True,
-                    key="potencial_escala_benchmark",
-                )
-            with escala_2:
-                st.markdown("**Distribucion escala propia**")
-                st.plotly_chart(
-                    fig_escala_potencial(df_potencial_evaluado, "escala_potencial"),
-                    use_container_width=True,
-                    key="potencial_escala_propia",
+                    key="potencial_escala_nivel",
                 )
 
             graf_1, graf_2 = st.columns(2)
@@ -3023,13 +3535,7 @@ if fase_activa == "fase2":
                     key="potencial_pais",
                 )
     with sub_f2_pot:
-        escala_valores = st.segmented_control(
-            "Escala de referencia",
-            options=["Benchmark externo", "Escala propia"],
-            default="Benchmark externo",
-            key="escala_valores_potencial",
-        )
-        limites_valores = (70, 85) if escala_valores == "Benchmark externo" else (82, 98)
+        limites_valores = (70, 85)
 
         if not df_valores_potencial.empty:
             df_valores_mapeo = df_valores_potencial.copy()
@@ -3308,7 +3814,7 @@ if fase_activa == "fase3":
     if df_obj_colab_base.empty:
         _proximamente("Fase III - Evaluacion de Objetivos")
     else:
-        filtro_obj_1, filtro_obj_2, filtro_obj_3 = st.columns(3)
+        filtro_obj_1, filtro_obj_2 = st.columns(2)
         with filtro_obj_1:
             filtro_obj_colabs = st.multiselect(
                 "Colaboradores",
@@ -3317,13 +3823,6 @@ if fase_activa == "fase3":
                 placeholder="Todos los colaboradores",
             )
         with filtro_obj_2:
-            filtro_obj_jefes = st.multiselect(
-                "Jefes",
-                sorted(df_obj_colab_base["jefe"].dropna().unique().tolist()),
-                key="filtro_objetivos_jefes",
-                placeholder="Todos los jefes",
-            )
-        with filtro_obj_3:
             filtro_obj_escala = st.multiselect(
                 "Nivel de desempeño",
                 ["Alto Desempeño", "Desempeño satisfactorio", "Bajo desempeño", "Desempeño insatisfactorio"],
@@ -3334,8 +3833,6 @@ if fase_activa == "fase3":
         df_obj_colab = df_obj_colab_base.copy()
         if filtro_obj_colabs:
             df_obj_colab = df_obj_colab[df_obj_colab["colaborador"].isin(filtro_obj_colabs)]
-        if filtro_obj_jefes:
-            df_obj_colab = df_obj_colab[df_obj_colab["jefe"].isin(filtro_obj_jefes)]
         df_obj_colab["nivel_desempeno"] = df_obj_colab["puntaje"].map(escala_objetivos_label)
         if filtro_obj_escala:
             df_obj_colab = df_obj_colab[df_obj_colab["nivel_desempeno"].isin(filtro_obj_escala)]
@@ -3596,17 +4093,18 @@ if fase_activa == "ninebox":
         st.info("No hay colaboradores con datos emparejados de desempeño 360 y potencial.")
     else:
         nombres_ninebox = sorted(df_ninebox_base["colaborador"].dropna().unique().tolist())
+        if len(df_ninebox_base) < 2:
+            st.info("Se requieren al menos dos colaboradores emparejados para calcular los puntos de corte del ninebox.")
+            st.stop()
+
+        cortes = cortes_ninebox(df_ninebox_base)
+        df_ninebox_clasificado_base = clasificar_ninebox(df_ninebox_base, cortes)
         seleccion_ninebox = st.session_state.get("filtro_ninebox_colaboradores", [])
-        df_ninebox_kpi = df_ninebox_base.copy()
+        df_ninebox_kpi = df_ninebox_clasificado_base.copy()
         if seleccion_ninebox:
             df_ninebox_kpi = df_ninebox_kpi[df_ninebox_kpi["colaborador"].isin(seleccion_ninebox)]
 
-        kpi_conteos = pd.Series(dtype=int)
-        if len(df_ninebox_kpi) >= 2:
-            cortes_kpi = cortes_ninebox(df_ninebox_kpi)
-            df_ninebox_kpi = clasificar_ninebox(df_ninebox_kpi, cortes_kpi)
-            kpi_conteos = df_ninebox_kpi["cuadrante"].value_counts()
-
+        kpi_conteos = df_ninebox_kpi["cuadrante"].value_counts()
         kpi_total = len(df_ninebox_kpi)
         kpi_alto_alto = int(kpi_conteos.get(1, 0))
         kpi_medio_medio = int(kpi_conteos.get(5, 0))
@@ -3638,16 +4136,15 @@ if fase_activa == "ninebox":
             placeholder="Todos los colaboradores emparejados",
             key="filtro_ninebox_colaboradores",
         )
-        df_ninebox = df_ninebox_base.copy()
+        df_ninebox_clasificado = df_ninebox_clasificado_base.copy()
         if filtro_ninebox:
-            df_ninebox = df_ninebox[df_ninebox["colaborador"].isin(filtro_ninebox)]
+            df_ninebox_clasificado = df_ninebox_clasificado[
+                df_ninebox_clasificado["colaborador"].isin(filtro_ninebox)
+            ]
 
-        if df_ninebox.empty or len(df_ninebox) < 2:
-            st.info("Selecciona al menos dos colaboradores con desempeño y potencial para construir la matriz.")
+        if df_ninebox_clasificado.empty:
+            st.info("No hay colaboradores con desempeño y potencial para los filtros seleccionados.")
         else:
-            cortes = cortes_ninebox(df_ninebox)
-            df_ninebox_clasificado = clasificar_ninebox(df_ninebox, cortes)
-
             st.markdown("**Puntos de corte**")
             cortes_html = '<div style="overflow-x:auto"><table class="ev-table"><thead><tr>'
             cortes_html += "<th></th><th>Promedio</th><th>Desviación</th><th>Rango sup</th><th>Rango inf</th></tr></thead><tbody>"
