@@ -26,6 +26,23 @@ class ResultadoIntegradoGraficosTest(unittest.TestCase):
 
         self.assertNotIn("render_tabla_dimension_objetivos", panel_izquierdo)
 
+    def test_colaboradores_aparece_antes_que_la_tabla_de_grupo(self):
+        inicio = self.contenido.index("with panel_der:")
+        fin = self.contenido.index("def imagen_data_uri", inicio)
+        panel_derecho = self.contenido[inicio:fin]
+
+        posicion_colaboradores = panel_derecho.index('st.markdown(f"**Colaboradores')
+        posicion_grupo = panel_derecho.index("render_tabla_dimension_objetivos")
+        self.assertLess(posicion_colaboradores, posicion_grupo)
+        self.assertIn('encabezado_promedio="Promedio"', panel_derecho)
+        self.assertNotIn('dim == "cargo_objetivo"', panel_derecho)
+
+    def test_usa_nombres_desempeno_objetivos_y_competencias(self):
+        self.assertIn('"tab": "Desempeño + Objetivos + Competencias"', self.contenido)
+        self.assertIn('("evd_360", "Desempeño")', self.contenido)
+        self.assertIn('("objetivos", "Objetivos")', self.contenido)
+        self.assertIn('("potencial", "Competencias")', self.contenido)
+
 
 if __name__ == "__main__":
     unittest.main()

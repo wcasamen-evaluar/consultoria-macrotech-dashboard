@@ -2353,6 +2353,7 @@ def render_tabla_dimension_objetivos(
     total_colab: int,
     promedio: float,
     altura_max: int | None = None,
+    encabezado_promedio: str = "Promedio de Objetivos",
 ) -> None:
     st.markdown(f"**{titulo}**")
     estilo = "overflow-x:auto"
@@ -2360,7 +2361,7 @@ def render_tabla_dimension_objetivos(
         estilo += f";max-height:{altura_max}px;overflow-y:auto"
     html = f'<div style="{estilo}"><table class="ev-table">'
     html += (
-        f"<thead><tr><th>{titulo}</th><th style='text-align:right'>Promedio de Objetivos</th>"
+        f"<thead><tr><th>{titulo}</th><th style='text-align:right'>{encabezado_promedio}</th>"
         "<th style='text-align:right'>Colaboradores</th><th style='text-align:right'>Participación</th></tr></thead><tbody>"
     )
     for _, fila in df_resumen.iterrows():
@@ -2552,36 +2553,36 @@ def fig_integrada_escala(df: pd.DataFrame) -> go.Figure:
 
 CONFIG_INTEGRADO = {
     "Completa": {
-        "tab": "360 + Objetivos + Potencial",
-        "titulo": "Resultados integrados 360 + Objetivos + Potencial",
+        "tab": "Desempeño + Objetivos + Competencias",
+        "titulo": "Resultados integrados Desempeño + Objetivos + Competencias",
         "promedio": "Promedio Completa",
         "colaboradores": "Colaboradores Completa",
-        "sub": "360 30% · Objetivos 30% · Potencial 40%",
-        "detalle": [("evd_360", "360"), ("objetivos", "Obj."), ("potencial", "Pot.")],
+        "sub": "Desempeño 30% · Objetivos 30% · Competencias 40%",
+        "detalle": [("evd_360", "Desempeño"), ("objetivos", "Objetivos"), ("potencial", "Competencias")],
     },
     "360+obj": {
-        "tab": "360 + Objetivos",
-        "titulo": "Resultados integrados 360 + Objetivos",
+        "tab": "Desempeño + Objetivos",
+        "titulo": "Resultados integrados Desempeño + Objetivos",
         "promedio": "Promedio 360+obj",
         "colaboradores": "Colaboradores 360+obj",
-        "sub": "360 50% · Objetivos 50%",
-        "detalle": [("evd_360", "360"), ("objetivos", "Obj.")],
+        "sub": "Desempeño 50% · Objetivos 50%",
+        "detalle": [("evd_360", "Desempeño"), ("objetivos", "Objetivos")],
     },
     "360+pot": {
-        "tab": "360 + Potencial",
-        "titulo": "Resultados integrados 360 + Potencial",
+        "tab": "Desempeño + Competencias",
+        "titulo": "Resultados integrados Desempeño + Competencias",
         "promedio": "Promedio 360+pot",
         "colaboradores": "Colaboradores 360+pot",
-        "sub": "360 60% · Potencial 40%",
-        "detalle": [("evd_360", "360"), ("potencial", "Pot.")],
+        "sub": "Desempeño 60% · Competencias 40%",
+        "detalle": [("evd_360", "Desempeño"), ("potencial", "Competencias")],
     },
     "obj+pot": {
-        "tab": "Objetivos + Potencial",
-        "titulo": "Resultados integrados Objetivos + Potencial",
+        "tab": "Objetivos + Competencias",
+        "titulo": "Resultados integrados Objetivos + Competencias",
         "promedio": "Promedio obj+pot",
         "colaboradores": "Colaboradores obj+pot",
-        "sub": "Objetivos 60% · Potencial 40%",
-        "detalle": [("objetivos", "Obj."), ("potencial", "Pot.")],
+        "sub": "Objetivos 60% · Competencias 40%",
+        "detalle": [("objetivos", "Objetivos"), ("potencial", "Competencias")],
     },
 }
 
@@ -2717,17 +2718,6 @@ def render_resultado_integrado_tipo(
             key=f"integrado_escala_{key_base}",
         )
     with panel_der:
-        for dim in dimensiones[:3]:
-            render_tabla_dimension_objetivos(
-                dim.replace("_", " ").title(),
-                resumen_dimension_integrada(df_tipo, dim),
-                dim,
-                total,
-                promedio,
-                altura_max=360 if dim == "cargo_objetivo" else None,
-            )
-            st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
-
         st.markdown(f"**Colaboradores {config['tab']}**")
         html = '<div class="ev-scroll-table"><table class="ev-table">'
         html += "<thead><tr><th>Colaborador</th>"
@@ -2745,6 +2735,16 @@ def render_resultado_integrado_tipo(
             html += "</tr>"
         html += "</tbody></table></div>"
         st.markdown(html, unsafe_allow_html=True)
+
+        st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
+        render_tabla_dimension_objetivos(
+            principal_dim.replace("_", " ").title(),
+            df_principal,
+            principal_dim,
+            total,
+            promedio,
+            encabezado_promedio="Promedio",
+        )
 
 
 def imagen_data_uri(ruta: str | Path) -> str | None:
@@ -4067,10 +4067,10 @@ if fase_activa == "res_int":
     )
 
     sub_ri_completa, sub_ri_360_obj, sub_ri_360_pot, sub_ri_obj_pot, sub_ri_colab = st.tabs([
-        "360 + Objetivos + Potencial",
-        "360 + Objetivos",
-        "360 + Potencial",
-        "Objetivos + Potencial",
+        "Desempeño + Objetivos + Competencias",
+        "Desempeño + Objetivos",
+        "Desempeño + Competencias",
+        "Objetivos + Competencias",
         "Colaboradores",
     ])
 
@@ -4121,7 +4121,7 @@ if fase_activa == "res_int":
 
             st.markdown("**Detalle general de colaboradores integrados**")
             html = '<div class="ev-scroll-table"><table class="ev-table">'
-            html += "<thead><tr><th>Colaborador</th><th>Tipo</th><th>Nivel</th><th>Grupo</th><th>Empresa</th><th>País</th><th style='text-align:right'>360</th><th style='text-align:right'>Obj.</th><th style='text-align:right'>Pot.</th><th style='text-align:right'>Integrada</th></tr></thead><tbody>"
+            html += "<thead><tr><th>Colaborador</th><th>Tipo</th><th>Nivel</th><th>Grupo</th><th>Empresa</th><th>País</th><th style='text-align:right'>Desempeño</th><th style='text-align:right'>Objetivos</th><th style='text-align:right'>Competencias</th><th style='text-align:right'>Integrada</th></tr></thead><tbody>"
             for _, fila in df_colab_integrado.sort_values("integrada", ascending=False).iterrows():
                 tipo_label = CONFIG_INTEGRADO.get(fila["etiqueta_integrada"], {}).get("tab", fila["etiqueta_integrada"])
                 html += (
