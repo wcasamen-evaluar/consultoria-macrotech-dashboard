@@ -35,8 +35,8 @@ ARCHIVO_BASE = next(
     Path(__file__).parent.glob("Fase_I_Evaluaci*n_360__180__90__copia_.xlsx"),
     Path(__file__).with_name("Fase_I_Evaluación_360__180__90__copia_.xlsx"),
 )
-VERSION_CARGA_BASE = 6
-VERSION_CARGA_DB = 4
+VERSION_CARGA_BASE = 7
+VERSION_CARGA_DB = 5
 
 # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 # CONFIGURACIÃ“N DEL PROYECTO â€” editar aquÃ­ si cambia el proyecto
@@ -564,6 +564,7 @@ def escala_objetivos_label(v: float) -> str:
 
 
 POTENCIAL_ESCALAS = ["Potencial Alto", "Potencial Medio", "Potencial Bajo"]
+POTENCIAL_LIMITES = (80, 85)
 POTENCIAL_COLORES = {
     "Potencial Alto": "#36a65c",
     "Potencial Medio": "#f0c419",
@@ -580,9 +581,10 @@ def escala_potencial_label(valor: object) -> str:
     puntaje = pd.to_numeric(pd.Series([valor]), errors="coerce").iloc[0]
     if pd.isna(puntaje):
         return ""
-    if puntaje >= 85:
+    puntaje_redondeado = round(float(puntaje))
+    if puntaje_redondeado >= POTENCIAL_LIMITES[1]:
         return "Potencial Alto"
-    if puntaje >= 70:
+    if puntaje_redondeado >= POTENCIAL_LIMITES[0]:
         return "Potencial Medio"
     return "Potencial Bajo"
 
@@ -2212,7 +2214,11 @@ def fig_objetivos_bullet(promedio: float) -> go.Figure:
     return fig
 
 
-def fig_objetivos_dimension(df_dim: pd.DataFrame, dimension: str) -> go.Figure:
+def fig_objetivos_dimension(
+    df_dim: pd.DataFrame,
+    dimension: str,
+    mostrar_bandas: bool = True,
+) -> go.Figure:
     datos = df_dim.sort_values("puntaje", ascending=True)
     fig = go.Figure(go.Bar(
         y=datos[dimension],
@@ -2224,10 +2230,11 @@ def fig_objetivos_dimension(df_dim: pd.DataFrame, dimension: str) -> go.Figure:
         customdata=datos[["colaboradores", "participacion"]],
         hovertemplate="%{y}<br>Promedio %{x:.2f}<br>%{customdata[0]} colaboradores<br>%{customdata[1]:.1%}<extra></extra>",
     ))
-    fig.add_vrect(x0=50, x1=70, fillcolor="#ff7276", opacity=0.75, line_width=0, layer="below")
-    fig.add_vrect(x0=70, x1=80, fillcolor="#ffe180", opacity=0.85, line_width=0, layer="below")
-    fig.add_vrect(x0=80, x1=90, fillcolor="#7fd3a1", opacity=0.78, line_width=0, layer="below")
-    fig.add_vrect(x0=90, x1=100, fillcolor="#82a9e6", opacity=0.85, line_width=0, layer="below")
+    if mostrar_bandas:
+        fig.add_vrect(x0=50, x1=70, fillcolor="#ff7276", opacity=0.75, line_width=0, layer="below")
+        fig.add_vrect(x0=70, x1=80, fillcolor="#ffe180", opacity=0.85, line_width=0, layer="below")
+        fig.add_vrect(x0=80, x1=90, fillcolor="#7fd3a1", opacity=0.78, line_width=0, layer="below")
+        fig.add_vrect(x0=90, x1=100, fillcolor="#82a9e6", opacity=0.85, line_width=0, layer="below")
     layout = PLOTLY_LAYOUT.copy()
     layout["margin"] = dict(l=20, r=42, t=34, b=32)
     fig.update_layout(
@@ -2515,9 +2522,11 @@ def resumen_dimension_integrada(df: pd.DataFrame, dimension: str, valor_col: str
     return resumen.sort_values(["puntaje", "colaboradores"], ascending=[False, False])
 
 
-def fig_integrada_bullet(promedio: float, titulo: str) -> go.Figure:
+def fig_integrada_bullet(promedio: float) -> go.Figure:
     fig = fig_objetivos_bullet(promedio)
-    fig.update_traces(title={"text": titulo, "font": {"size": 15}})
+    fig.data[0].gauge.steps = ()
+    fig.data[0].title.text = ""
+    fig.data[0].number.valueformat = ".2f"
     return fig
 
 
@@ -2688,25 +2697,16 @@ def render_resultado_integrado_tipo(
     panel_izq, panel_centro, panel_der = st.columns([0.9, 1.55, 1.1])
     with panel_izq:
         render_tabla_escala_integrada(df_tipo, f"Escala {config['tab']}")
-        for dim in dimensiones[:1]:
-            st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
-            render_tabla_dimension_objetivos(
-                dim.replace("_", " ").title(),
-                resumen_dimension_integrada(df_tipo, dim),
-                dim,
-                total,
-                promedio,
-            )
     with panel_centro:
         st.markdown(f"**{config['titulo']}**")
         st.plotly_chart(
-            fig_integrada_bullet(promedio, config["titulo"]),
+            fig_integrada_bullet(promedio),
             use_container_width=True,
             key=f"integrado_bullet_{key_base}",
         )
         st.markdown(f"**Resultado por {principal_dim.replace('_', ' ')}**")
         st.plotly_chart(
-            fig_objetivos_dimension(df_principal, principal_dim),
+            fig_objetivos_dimension(df_principal, principal_dim, mostrar_bandas=False),
             use_container_width=True,
             key=f"integrado_dimension_{key_base}",
         )
@@ -3443,7 +3443,7 @@ if fase_activa == "fase2":
             )
         with filtro_pot_nivel:
             niveles_potencial = st.multiselect(
-                "Nivel de potencial",
+                "Nivel de Competencias",
                 options=POTENCIAL_ESCALAS,
                 placeholder="Todos los niveles",
                 key="filtro_potencial_niveles",
@@ -3463,8 +3463,8 @@ if fase_activa == "fase2":
             df_valores_potencial["colaborador"].isin(colabs_potencial_activos)
         ]
 
-    sub_f2_res, sub_f2_pot, sub_f2_disc, sub_f2_iq, sub_f2_curvas = st.tabs([
-        "Resumen", "Valores", "DISC / Arquetipos", "IQ Inteligencia", "Curvas de Desarrollo",
+    sub_f2_res, sub_f2_pot, sub_f2_disc, sub_f2_iq, sub_f2_curvas, sub_f2_colaboradores = st.tabs([
+        "Resumen", "Valores", "DISC / Arquetipos", "IQ Inteligencia", "Curvas de Desarrollo", "Colaboradores",
     ])
     with sub_f2_res:
         total_potencial = len(df_potencial_evaluado)
@@ -3495,12 +3495,12 @@ if fase_activa == "fase2":
             with medidor_1:
                 st.markdown("**Resultado global de potencial**")
                 st.plotly_chart(
-                    fig_medidor_potencial(promedio_potencial, (70, 85)),
+                    fig_medidor_potencial(promedio_potencial, POTENCIAL_LIMITES),
                     use_container_width=True,
                     key="potencial_medidor_global",
                 )
             with medidor_2:
-                st.markdown("**Distribuci\u00f3n por nivel de potencial**")
+                st.markdown("**Distribuci\u00f3n por nivel de competencias**")
                 st.plotly_chart(
                     fig_escala_potencial(df_potencial_evaluado, "nivel_potencial"),
                     use_container_width=True,
@@ -3793,6 +3793,74 @@ if fase_activa == "fase2":
                     st.markdown(html, unsafe_allow_html=True)
 
 # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    with sub_f2_colaboradores:
+        st.markdown("**Personas evaluadas y nivel de competencias**")
+        if df_potencial_evaluado.empty:
+            st.info("No hay personas evaluadas para los filtros seleccionados.")
+        else:
+            tabla_evaluados = df_potencial_evaluado.copy()
+            orden_niveles = {nivel: indice for indice, nivel in enumerate(POTENCIAL_ESCALAS)}
+            tabla_evaluados["orden_nivel"] = tabla_evaluados["nivel_potencial"].map(orden_niveles)
+            tabla_evaluados = tabla_evaluados.sort_values(
+                ["orden_nivel", "evaluacion_potencial", "colaborador"],
+                ascending=[True, False, True],
+                na_position="last",
+            )
+
+            html = '<div class="ev-scroll-table"><table class="ev-table">'
+            html += (
+                "<thead><tr><th>Colaborador</th><th>Identificación</th><th>Empresa</th><th>Cargo</th>"
+                "<th style='text-align:right'>Puntaje</th>"
+                "<th>Nivel de Competencias</th></tr></thead><tbody>"
+            )
+            fondos_nivel = {
+                "Potencial Alto": "#e5f4ea",
+                "Potencial Medio": "#fff6d6",
+                "Potencial Bajo": "#fbe9e8",
+            }
+            for _, fila in tabla_evaluados.iterrows():
+                colaborador_valor = fila.get("colaborador")
+                colaborador = (
+                    html_lib.escape(str(colaborador_valor))
+                    if pd.notna(colaborador_valor) and str(colaborador_valor).strip()
+                    else "Sin dato"
+                )
+                identificacion_valor = fila.get("identificacion")
+                identificacion = (
+                    html_lib.escape(str(identificacion_valor))
+                    if pd.notna(identificacion_valor) and str(identificacion_valor).strip()
+                    else "&mdash;"
+                )
+                empresa_valor = fila.get("empresa")
+                empresa = (
+                    html_lib.escape(str(empresa_valor))
+                    if pd.notna(empresa_valor) and str(empresa_valor).strip()
+                    else "&mdash;"
+                )
+                cargo_valor = fila.get("cargo")
+                cargo = (
+                    html_lib.escape(str(cargo_valor))
+                    if pd.notna(cargo_valor) and str(cargo_valor).strip()
+                    else "&mdash;"
+                )
+                puntaje = f"{float(fila['evaluacion_potencial']):.2f}"
+                nivel = str(fila["nivel_potencial"])
+                nivel_seguro = html_lib.escape(nivel)
+                color_nivel = POTENCIAL_COLORES.get(nivel, "#6b6b8a")
+                fondo_nivel = fondos_nivel.get(nivel, "#f2f2f7")
+                html += (
+                    "<tr>"
+                    f"<td style='font-weight:600'>{colaborador}</td>"
+                    f"<td>{identificacion}</td><td>{empresa}</td><td>{cargo}</td>"
+                    f"<td style='text-align:right;font-weight:700'>{puntaje}</td>"
+                    "<td>"
+                    f"<span style='display:inline-block;padding:4px 9px;border-radius:999px;"
+                    f"background:{fondo_nivel};color:{color_nivel};font-weight:700;white-space:nowrap'>"
+                    f"{nivel_seguro}</span></td></tr>"
+                )
+            html += "</tbody></table></div>"
+            st.markdown(html, unsafe_allow_html=True)
+
 # FASE III - EVALUACION DE OBJETIVOS
 if fase_activa == "fase3":
     st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)

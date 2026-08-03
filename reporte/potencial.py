@@ -13,6 +13,20 @@ warnings.filterwarnings("ignore", category=pd.errors.PerformanceWarning)
 HOJA_POTENCIAL = "Potencial"
 ETIQUETAS_ESCALA = ["Ajustado al perfil", "Cercano al perfil", "Alejado al perfil"]
 MAPA_ESCALA = {etiqueta.casefold(): etiqueta for etiqueta in ETIQUETAS_ESCALA}
+LIMITES_NIVEL_POTENCIAL = (80, 85)
+
+
+def clasificar_nivel_potencial(valor: object) -> str:
+    """Redondea el puntaje al entero y aplica la escala oficial 80/85."""
+    puntaje = pd.to_numeric(pd.Series([valor]), errors="coerce").iloc[0]
+    if pd.isna(puntaje):
+        return ""
+    puntaje_redondeado = round(float(puntaje))
+    if puntaje_redondeado >= LIMITES_NIVEL_POTENCIAL[1]:
+        return "Potencial Alto"
+    if puntaje_redondeado >= LIMITES_NIVEL_POTENCIAL[0]:
+        return "Potencial Medio"
+    return "Potencial Bajo"
 
 
 def contar_escala(df: pd.DataFrame, columna: str) -> pd.Series:
@@ -39,10 +53,16 @@ def _codigo_arquetipo(valor):
     return match.group(1).strip() if match else valor.strip()
 
 
-def _clasificar_potencial(valor, limites: tuple[float, float]):
+def _clasificar_potencial(
+    valor,
+    limites: tuple[float, float],
+    redondear: bool = False,
+):
     puntaje = pd.to_numeric(pd.Series([valor]), errors="coerce").iloc[0]
     if pd.isna(puntaje):
         return pd.NA
+    if redondear:
+        puntaje = round(float(puntaje))
     bajo, alto = limites
     if puntaje >= alto:
         return "Ajustado al perfil"
@@ -140,7 +160,11 @@ def leer_potencial(ruta: str | Path) -> dict:
         df["evaluacion_potencial"] = df["potencial_2025"]
     if df["escala_benchmark"].isna().all():
         df["escala_benchmark"] = df["evaluacion_potencial"].apply(
-            lambda valor: _clasificar_potencial(valor, (70, 85))
+            lambda valor: _clasificar_potencial(
+                valor,
+                LIMITES_NIVEL_POTENCIAL,
+                redondear=True,
+            )
         )
     if df["escala_potencial"].isna().all():
         df["escala_potencial"] = df["evaluacion_potencial"].apply(

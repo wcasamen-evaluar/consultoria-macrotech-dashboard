@@ -71,6 +71,15 @@ CAP_JSON = ASSETS_DIR / "cap.json"
 DESEMPENO_360_JSON = ASSETS_DIR / "desempeno_360_interpretaciones.json"
 OBJETIVOS_JSON = ASSETS_DIR / "objetivos_interpretaciones.json"
 
+POTENCIAL_MARCO_LECTURA = (
+    "Este informe tiene como propósito brindar una visión integral de las capacidades y atributos evaluados. "
+    "La información busca convertirse en una herramienta de autoconocimiento, reflexión y construcción de acciones "
+    "concretas de desarrollo, facilitando la identificación de fortalezas, oportunidades de crecimiento y posibles rutas "
+    "para potenciar el impacto organizacional. "
+    "Los resultados reflejan tendencias obtenidas durante el proceso de evaluación y deben interpretarse como un "
+    "insumo para el desarrollo continuo, acompañado de conversaciones de feedback y acciones de crecimiento profesional."
+)
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -1338,7 +1347,7 @@ def _cap_interpretacion(score):
             "name": "Sin dato",
             "interpretation": "No hay competencias de potencial suficientes para calcular el resultado global.",
         }
-    percent = score * 100
+    percent = round(score * 100)
     for item in _cap_config().get("ranges", []):
         start = float(item.get("from", 0))
         end = float(item.get("to", 0))
@@ -1372,6 +1381,14 @@ def _cap_bg_color(name):
     if name in {"Potencial Medio", "Cercano al Perfil"}:
         return colors.HexColor("#FFF3E2")
     return colors.HexColor("#FDEBEC")
+
+
+def _cap_color_hex(name):
+    if name in {"Potencial Alto", "Ajustado al Perfil"}:
+        return "#00A651"
+    if name in {"Potencial Medio", "Cercano al Perfil"}:
+        return "#FF8A00"
+    return "#E53935"
 
 
 def _level_color(label):
@@ -1790,29 +1807,81 @@ def _card_360_puntuacion(puntaje, banda, ancho):
     return _card_table([row], ancho, bg="#ffffff", border="#ded8fb", pad=15, radius=12)
 
 
+def _card_potencial_descripcion(ancho):
+    content = [
+        Paragraph("MARCO DE LECTURA", ParagraphStyle(
+            "pot_desc_eye", fontName="Helvetica-Bold", fontSize=7.2,
+            textColor=MAGENTA, leading=9,
+        )),
+        spacer(0.06),
+        Paragraph("Descripción de la evaluación", ParagraphStyle(
+            "pot_desc_title", fontName="Helvetica-Bold", fontSize=10.5,
+            textColor=INK, leading=12.5,
+        )),
+        spacer(0.16),
+        Paragraph(_texto(POTENCIAL_MARCO_LECTURA), ParagraphStyle(
+            "pot_desc_body", fontName="Helvetica", fontSize=9.55,
+            textColor=INK2, leading=13.8, alignment=TA_JUSTIFY,
+        )),
+    ]
+    return _card_table(content, ancho, bg="#fbfaff", border="#ded8fb", pad=15, radius=12)
+
+
+def _card_potencial_puntuacion(cap, cap_info, ancho):
+    cap_percent = cap.get("percent")
+    cap_name = _texto(cap_info.get("name"), "Sin dato")
+    color_hex = _cap_color_hex(cap_name)
+    left = [
+        Paragraph("Puntuación general", ParagraphStyle(
+            "pot_score_title", fontName="Helvetica-Bold", fontSize=10.8,
+            textColor=INK, leading=13,
+        )),
+        spacer(0.08),
+        Paragraph(cap_name.upper(), ParagraphStyle(
+            "pot_score_label", fontName="Helvetica-Bold", fontSize=7.4,
+            textColor=colors.HexColor(color_hex), leading=9,
+        )),
+        spacer(0.14),
+        Paragraph(
+            f"<b>{cap_name}.</b> {_texto(cap_info.get('interpretation'))}",
+            ParagraphStyle(
+                "pot_score_body", fontName="Helvetica", fontSize=9.45,
+                textColor=INK2, leading=13.2, alignment=TA_LEFT,
+            ),
+        ),
+    ]
+    score_panel = RoundedBox(
+        Table([[crear_donut_360(cap_percent or 0, color_hex, ancho_cm=3.25, alto_cm=3.25)]], colWidths=[3.55*cm]),
+        3.78*cm,
+        fill=colors.white,
+        stroke=colors.HexColor("#eeeafb"),
+        radius=14,
+        pad=6,
+        stroke_width=0.5,
+    )
+    row = Table([[left, score_panel]], colWidths=[ancho - 5.25*cm, 3.78*cm])
+    row.setStyle(TableStyle([
+        ("VALIGN", (0,0), (-1,-1), "MIDDLE"),
+        ("LEFTPADDING", (0,0), (-1,-1), 0),
+        ("RIGHTPADDING", (0,0), (-1,-1), 0),
+        ("RIGHTPADDING", (0,0), (0,0), 14),
+        ("TOPPADDING", (0,0), (-1,-1), 0),
+        ("BOTTOMPADDING", (0,0), (-1,-1), 0),
+        ("ALIGN", (1,0), (1,0), "CENTER"),
+    ]))
+    return _card_table([row], ancho, bg="#ffffff", border="#ded8fb", pad=15, radius=12)
+
+
 def _header_360(nombre, subtitulo, ancho, empresa=""):
     avatar = Drawing(0.86*cm, 0.86*cm)
     avatar.add(Rect(0, 0, 0.86*cm, 0.86*cm, rx=0.43*cm, ry=0.43*cm, fillColor=colors.HexColor("#fff0f8"), strokeColor=None))
-    avatar.add(String(0.43*cm, 0.29*cm, "360", fontName="Helvetica-Bold", fontSize=7.0, textAnchor="middle", fillColor=colors.HexColor("#ff4298")))
-    text = [
-        Paragraph(_texto(nombre), ParagraphStyle(
-            "header360_name", fontName="Helvetica-Bold", fontSize=12.2,
-            textColor=WHITE, leading=15,
-        )),
-        Paragraph(_texto(subtitulo, "General"), ParagraphStyle(
-            "header360_sub", fontName="Helvetica", fontSize=9.5,
-            textColor=colors.HexColor("#c9c5df"), leading=11,
-        )),
-    ]
-    if empresa:
-        text.append(Paragraph(_texto(empresa), ParagraphStyle(
-            "header360_empresa", fontName="Helvetica", fontSize=8.2,
-            textColor=colors.HexColor("#a9a3c4"), leading=10,
-        )))
-    badge = _pill_flow("EVALUACI\u00d3N DESEMPE\u00d1O", "#ff7a00", "#fff4e8", width_cm=3.35, font_size=7.4)
-    row = Table([[avatar, text, badge]], colWidths=[1.15*cm, ancho - 5.2*cm, 3.55*cm])
+    initials = "".join(part[:1] for part in _texto(nombre, "R").split()[:2]).upper() or "R"
+    avatar.add(String(0.43*cm, 0.29*cm, initials, fontName="Helvetica-Bold", fontSize=7.0, textAnchor="middle", fillColor=colors.HexColor("#ff4298")))
+    badge = _pill_flow("EVALUACI\u00d3N DESEMPE\u00d1O", "#ff7a00", "#fff4e8", width_cm=4.2, font_size=7.0)
+    row = Table([[avatar, Spacer(1, 1), badge, Spacer(1, 1)]], colWidths=[1.15*cm, ancho - 6.1*cm, 4.35*cm, 0.60*cm])
     row.setStyle(TableStyle([
         ("VALIGN", (0,0), (-1,-1), "MIDDLE"),
+        ("ALIGN", (2,0), (2,0), "RIGHT"),
         ("LEFTPADDING", (0,0), (-1,-1), 0),
         ("RIGHTPADDING", (0,0), (-1,-1), 0),
         ("TOPPADDING", (0,0), (-1,-1), 0),
@@ -1821,7 +1890,7 @@ def _header_360(nombre, subtitulo, ancho, empresa=""):
     return RoundedBox(row, ancho, fill=colors.HexColor("#151326"), stroke=colors.HexColor("#151326"), radius=12, pad=13, stroke_width=0)
 
 
-def _header_resultado(nombre, subtitulo, badge, ancho, accent="#ff4298", empresa=""):
+def _header_resultado(nombre, subtitulo, badge, ancho, accent="#ff4298", empresa="", jefe=""):
     avatar = Drawing(0.86*cm, 0.86*cm)
     avatar.add(Rect(0, 0, 0.86*cm, 0.86*cm, rx=0.43*cm, ry=0.43*cm, fillColor=colors.HexColor("#fff0f8"), strokeColor=None))
     initials = "".join(part[:1] for part in _texto(nombre, "R").split()[:2]).upper() or "R"
@@ -1841,10 +1910,33 @@ def _header_resultado(nombre, subtitulo, badge, ancho, accent="#ff4298", empresa
             "header_result_empresa", fontName="Helvetica", fontSize=8.2,
             textColor=colors.HexColor("#a9a3c4"), leading=10,
         )))
+    if jefe:
+        text.append(Paragraph(f"Jefe: {_texto(jefe)}", ParagraphStyle(
+            "header_result_jefe", fontName="Helvetica", fontSize=7.8,
+            textColor=colors.HexColor("#a9a3c4"), leading=9.2,
+        )))
     badge_flow = _pill_flow(_texto(badge).upper(), "#ff7a00", "#fff4e8", width_cm=3.25, font_size=7.2)
     row = Table([[avatar, text, badge_flow]], colWidths=[1.15*cm, ancho - 5.1*cm, 3.45*cm])
     row.setStyle(TableStyle([
         ("VALIGN", (0,0), (-1,-1), "MIDDLE"),
+        ("LEFTPADDING", (0,0), (-1,-1), 0),
+        ("RIGHTPADDING", (0,0), (-1,-1), 0),
+        ("TOPPADDING", (0,0), (-1,-1), 0),
+        ("BOTTOMPADDING", (0,0), (-1,-1), 0),
+    ]))
+    return RoundedBox(row, ancho, fill=colors.HexColor("#151326"), stroke=colors.HexColor("#151326"), radius=12, pad=13, stroke_width=0)
+
+
+def _header_evaluacion_simple(nombre, titulo, ancho, accent="#ff4298"):
+    avatar = Drawing(0.86*cm, 0.86*cm)
+    avatar.add(Rect(0, 0, 0.86*cm, 0.86*cm, rx=0.43*cm, ry=0.43*cm, fillColor=colors.HexColor("#fff0f8"), strokeColor=None))
+    initials = "".join(part[:1] for part in _texto(nombre, "R").split()[:2]).upper() or "R"
+    avatar.add(String(0.43*cm, 0.29*cm, initials, fontName="Helvetica-Bold", fontSize=7.0, textAnchor="middle", fillColor=colors.HexColor(accent)))
+    badge = _pill_flow(_texto(titulo).upper(), "#ff7a00", "#fff4e8", width_cm=4.55, font_size=6.9)
+    row = Table([[avatar, Spacer(1, 1), badge, Spacer(1, 1)]], colWidths=[1.15*cm, ancho - 6.45*cm, 4.70*cm, 0.60*cm])
+    row.setStyle(TableStyle([
+        ("VALIGN", (0,0), (-1,-1), "MIDDLE"),
+        ("ALIGN", (2,0), (2,0), "RIGHT"),
         ("LEFTPADDING", (0,0), (-1,-1), 0),
         ("RIGHTPADDING", (0,0), (-1,-1), 0),
         ("TOPPADDING", (0,0), (-1,-1), 0),
@@ -1912,7 +2004,7 @@ def _compact_data_chip(label, value, width_cm):
     return RoundedBox(t, width_cm*cm, fill=colors.HexColor("#fbfaff"), stroke=colors.HexColor("#ded8fb"), radius=7, pad=0, stroke_width=0.45)
 
 
-def _primera_hoja_intro(nombre, cargo, empresa, ancho):
+def _primera_hoja_intro(nombre, cargo, empresa, jefe, ancho, badge="Evaluación de Competencias"):
     logo_row = Table(
         [[
             _logo_flow(MACROTECH_LOGO, 4.05, 1.05),
@@ -1933,7 +2025,7 @@ def _primera_hoja_intro(nombre, cargo, empresa, ancho):
     return [
         logo_row,
         spacer(0.18),
-        _header_resultado(nombre, cargo, "Competencias", ancho, accent="#ff4298", empresa=empresa),
+        _header_resultado(nombre, cargo, badge, ancho, accent="#ff4298", empresa=empresa, jefe=jefe),
         spacer(0.45),
     ]
 
@@ -2001,31 +2093,20 @@ def _card_objetivos_puntuacion(objetivos, ancho):
     return _card_table([row], ancho, bg="#ffffff", border="#ded8fb", pad=15, radius=12)
 
 
-def _objetivos_section_flow(nombre, ficha, objetivos, objetivos_detalle, ancho):
-    cargo = objetivos.get("cargo_objetivo") or ficha.get("cargo") or "Objetivos"
+def _objetivos_section_flow(nombre, ficha, objetivos, objetivos_detalle, ancho, incluir_header=True):
+    cargo = ficha.get("cargo") or objetivos.get("cargo_objetivo") or "Objetivos"
     empresa = ficha.get("empresa") or ""
-    jefe = objetivos.get("jefe") or ficha.get("jefe") or "Sin dato"
-    n_obj = objetivos.get("objetivos") or 0
-    chips = Table([[
-        _context_chip("Objetivos", n_obj, 3.1),
-        _context_chip("Jefe", jefe, 5.8),
-        _context_chip("Cargo", cargo, 7.0),
-    ]], colWidths=[3.25*cm, 5.95*cm, ancho - 9.2*cm])
-    chips.setStyle(TableStyle([
-        ("VALIGN", (0,0), (-1,-1), "TOP"),
-        ("LEFTPADDING", (0,0), (-1,-1), 0),
-        ("RIGHTPADDING", (0,0), (-1,-1), 6),
-        ("TOPPADDING", (0,0), (-1,-1), 0),
-        ("BOTTOMPADDING", (0,0), (-1,-1), 0),
-    ]))
-    return [
-        _header_resultado(nombre, cargo, "Objetivos", ancho, accent="#ff4298", empresa=empresa),
-        spacer(0.34),
+    jefe = ficha.get("jefe") or objetivos.get("jefe") or ""
+    flow = []
+    if incluir_header:
+        flow += [
+            _header_evaluacion_simple(nombre, "Evaluación de Objetivos", ancho, accent="#ff4298"),
+            spacer(0.34),
+        ]
+    flow += [
         _card_objetivos_descripcion(ancho),
         spacer(0.34),
         _card_objetivos_puntuacion(objetivos, ancho),
-        spacer(0.30),
-        chips,
         spacer(0.34),
         Paragraph("Objetivos evaluados", ParagraphStyle(
             "obj_detail_title", fontName="Helvetica-Bold", fontSize=11.4,
@@ -2034,6 +2115,7 @@ def _objetivos_section_flow(nombre, ficha, objetivos, objetivos_detalle, ancho):
         spacer(0.16),
         _tabla_objetivos_detalle(objetivos_detalle, ancho),
     ]
+    return flow
 
 
 def _tabla_objetivos_detalle(items, ancho):
@@ -2586,6 +2668,59 @@ def _disc_section_flow(contexto, ancho, estilos):
         ),
     ]
 
+
+def _tiene_numero_real(valor):
+    try:
+        numero = float(valor)
+    except (TypeError, ValueError):
+        return False
+    return math.isfinite(numero) and numero > 0
+
+
+def _tiene_texto_real(valor):
+    texto = _texto(valor, "").strip()
+    return bool(texto) and texto.casefold() not in {"sin dato", "nan", "none", "null", "-"}
+
+
+def _primer_texto_real(*valores, default=""):
+    for valor in valores:
+        if _tiene_texto_real(valor):
+            return _texto(valor)
+    return default
+
+
+def _tiene_potencial(contexto):
+    if not contexto:
+        return False
+    competencias = contexto.get("competencias_potencial", []) or []
+    cap = contexto.get("cap", {}) or {}
+    return bool(competencias) or _tiene_numero_real(cap.get("percent"))
+
+
+def _tiene_disc(contexto):
+    if not contexto:
+        return False
+    potencial = contexto.get("potencial", {}) or {}
+    if not potencial:
+        return False
+    if _tiene_texto_real(potencial.get("disc")) or _tiene_texto_real(potencial.get("arquetipo")):
+        return True
+    return any(_tiene_numero_real(potencial.get(col)) for col in ("d", "i", "s", "c"))
+
+
+def _tiene_desempeno_360(resultado):
+    if not resultado:
+        return False
+    return _tiene_numero_real(resultado.get("puntaje_global")) and bool(resultado.get("competencias"))
+
+
+def _tiene_objetivos(contexto):
+    if not contexto:
+        return False
+    objetivos = contexto.get("objetivos", {}) or {}
+    detalle = contexto.get("objetivos_detalle", []) or []
+    return _tiene_numero_real(objetivos.get("puntaje")) or bool(detalle)
+
 # ---------------------------------------------------------------------------
 # FunciÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³n principal
 # ---------------------------------------------------------------------------
@@ -2596,11 +2731,24 @@ def generar_pdf(nombre, resultado, proceso, cliente, fecha,
 
     global TOTAL_PAGES
     contexto_integral = contexto_integral or {}
-    competencias_pot_total = len((contexto_integral or {}).get("competencias_potencial", []) or [])
-    paginas_detalle_pot = math.ceil(competencias_pot_total / 3) if competencias_pot_total else 0
-    items_360_total = len((contexto_integral or {}).get("items_360", {}) or {})
+    hay_potencial = _tiene_potencial(contexto_integral)
+    hay_disc = _tiene_disc(contexto_integral)
+    hay_360 = _tiene_desempeno_360(resultado)
+    hay_objetivos = _tiene_objetivos(contexto_integral)
+    competencias_pot_total = len((contexto_integral or {}).get("competencias_potencial", []) or []) if hay_potencial else 0
+    paginas_detalle_pot = math.ceil(competencias_pot_total / 4) if competencias_pot_total else 0
+    items_360_total = len((contexto_integral or {}).get("items_360", {}) or {}) if hay_360 else 0
     paginas_items_360 = math.ceil(items_360_total / 6) if items_360_total else 0
-    TOTAL_PAGES = (5 + paginas_detalle_pot + paginas_items_360) if contexto_integral else 3
+    TOTAL_PAGES = 0
+    if hay_potencial:
+        TOTAL_PAGES += 1 + paginas_detalle_pot
+    if hay_disc:
+        TOTAL_PAGES += 1
+    if hay_360:
+        TOTAL_PAGES += 2 + paginas_items_360
+    if hay_objetivos:
+        TOTAL_PAGES += 1
+    TOTAL_PAGES = max(TOTAL_PAGES, 1)
 
     estilos = E()
     ancho_cont = W - 2*PAD_LAT
@@ -2641,154 +2789,117 @@ def generar_pdf(nombre, resultado, proceso, cliente, fecha,
     pesos          = resultado["pesos_aplicados"]
 
     ficha_intro = (contexto_integral or {}).get("ficha", {}) or {}
-    cargo_intro = cargo or ficha_intro.get("cargo") or ficha_intro.get("cargo_objetivo") or proceso
-    empresa_intro = ficha_intro.get("empresa") or cliente
-    story = _primera_hoja_intro(nombre, cargo_intro, empresa_intro, ancho_cont)
+    objetivos_intro = (contexto_integral or {}).get("objetivos", {}) or {}
+    cargo_intro = _primer_texto_real(
+        cargo,
+        ficha_intro.get("cargo"),
+        ficha_intro.get("cargo_objetivo"),
+        objetivos_intro.get("cargo_objetivo"),
+        proceso,
+    )
+    empresa_intro = _primer_texto_real(ficha_intro.get("empresa"), cliente, default="Macrotech")
+    jefe_intro = _primer_texto_real(ficha_intro.get("jefe"), objetivos_intro.get("jefe"))
+    primera_badge = "Evaluación de Competencias"
+    if not hay_potencial and hay_360:
+        primera_badge = "Evaluación Desempeño"
+    elif not hay_potencial and not hay_360 and hay_objetivos:
+        primera_badge = "Evaluación de Objetivos"
+    story = _primera_hoja_intro(nombre, cargo_intro, empresa_intro, jefe_intro, ancho_cont, badge=primera_badge)
+    primera_seccion = True
+    contenido_agregado = False
 
-    if contexto_integral:
+    def nueva_pagina():
+        nonlocal primera_seccion
+        if primera_seccion:
+            story.append(NextPageTemplate("contenido"))
+            primera_seccion = False
+        story.append(PageBreak())
+
+    if hay_potencial:
         competencias_pot = contexto_integral.get("competencias_potencial", []) or []
         cap = contexto_integral.get("cap", {}) or {}
         cap_score = cap.get("score")
-        cap_percent = cap.get("percent")
         cap_info = _cap_interpretacion(cap_score)
-        cap_name = cap_info.get("name", "Sin dato")
-        cap_color = _cap_color(cap_name)
-        cap_bg = _cap_bg_color(cap_name)
         story += [
-            Paragraph("RESULTADO GLOBAL DE COMPETENCIAS", estilos["section_h"]),
-            hr(LINE, sb=8, sa=8),
-        ]
-
-        cap_col = 5.25*cm
-        int_col = ancho_cont - cap_col
-
-        cap_card = [_card_table([
-            crear_donut_cap(cap_percent, cap_name, ancho_cm=3.7, alto_cm=3.7),
-            Paragraph(
-                cap_name.upper(),
-                ParagraphStyle("capname", fontName="Helvetica-Bold", fontSize=9,
-                               textColor=cap_color, leading=12, alignment=TA_CENTER),
-            ),
-            spacer(0.10),
-            Paragraph(
-                f"{cap.get('competencias', 0)} competencias evaluadas",
-                ParagraphStyle("capcount", fontName="Helvetica", fontSize=7.8,
-                               textColor=INK_SOFT, leading=10, alignment=TA_CENTER),
-            ),
-        ], 4.70*cm, bg="#ffffff", border="#dfe8f5", pad=8)]
-        interpretacion_pill = RoundedBox(
-            Table(
-                [[Paragraph(
-                    f"Interpretaci\u00f3n: <b>{_texto(cap_name)}</b>",
-                    ParagraphStyle("cap_pill_text", fontName="Helvetica", fontSize=9.2,
-                                   textColor=cap_color, leading=12, alignment=TA_CENTER),
-                )]],
-                colWidths=[int_col - 0.25*cm],
-            ),
-            int_col - 0.25*cm,
-            fill=cap_bg,
-            stroke=cap_bg,
-            radius=13,
-            pad=4,
-            stroke_width=0,
-        )
-        interpretacion_card = [
-            interpretacion_pill,
-            spacer(0.35),
-            Paragraph(
-                _texto(cap_info.get("interpretation")),
-                ParagraphStyle("capbody", fontName="Helvetica", fontSize=9.4,
-                               textColor=INK2, leading=14.3, alignment=TA_JUSTIFY),
-            ),
-        ]
-        cap_layout = Table(
-            [[cap_card, interpretacion_card]],
-            colWidths=[cap_col, int_col],
-        )
-        cap_layout.setStyle(TableStyle([
-            ("BACKGROUND", (0,0), (-1,-1), colors.HexColor("#ffffff")),
-            ("VALIGN", (0,0), (-1,-1), "TOP"),
-            ("LEFTPADDING", (0,0), (-1,-1), 0),
-            ("RIGHTPADDING", (0,0), (0,0), 8),
-            ("RIGHTPADDING", (1,0), (1,0), 0),
-            ("TOPPADDING", (0,0), (-1,-1), 0),
-            ("BOTTOMPADDING", (0,0), (-1,-1), 0),
-        ]))
-        story.append(cap_layout)
-        story += [
-            hr(LINE, sb=8, sa=8),
+            _card_potencial_descripcion(ancho_cont),
+            spacer(0.34),
+            _card_potencial_puntuacion(cap, cap_info, ancho_cont),
+            spacer(0.34),
             Paragraph("Competencias consideradas", estilos["h3"]),
             spacer(0.2),
+            _tabla_cap_competencias(competencias_pot, ancho_cont, estilos, limite=12),
         ]
+        contenido_agregado = True
         if competencias_pot:
-            story.append(_tabla_cap_competencias(competencias_pot, ancho_cont, estilos, limite=12))
-        else:
-            story.append(Paragraph("No hay detalle de competencias de potencial para este colaborador.", estilos["body"]))
-        story += [
-            NextPageTemplate("contenido"),
-            PageBreak(),
-            Paragraph("INTERPRETACI\u00d3N DE RESULTADOS<br/>DE COMPETENCIAS", ParagraphStyle(
-                "section_h_pot_compact", fontName="Helvetica-Bold", fontSize=18.5,
-                textColor=INK, leading=23,
-            )),
-            hr(LINE, sb=5, sa=5),
-            spacer(0.03),
-        ]
-        catalogo_comp = _catalogo_competencias_interpretacion()
-        if competencias_pot:
+            nueva_pagina()
+            story += [
+                Paragraph("INTERPRETACI\u00d3N DE RESULTADOS<br/>DE COMPETENCIAS", ParagraphStyle(
+                    "section_h_pot_compact", fontName="Helvetica-Bold", fontSize=18.5,
+                    textColor=INK, leading=23,
+                )),
+                hr(LINE, sb=5, sa=5),
+                spacer(0.03),
+            ]
+            catalogo_comp = _catalogo_competencias_interpretacion()
             for comp_item in competencias_pot:
                 story.append(_competencia_detalle_card(comp_item, catalogo_comp, ancho_cont, estilos))
-        else:
-            story.append(Paragraph("No hay detalle de competencias de potencial para este colaborador.", estilos["body"]))
-        story += [
-            NextPageTemplate("contenido"),
-            PageBreak(),
-            *_disc_section_flow(contexto_integral, ancho_cont, estilos),
-            PageBreak(),
-        ]
 
-    # PAG 2 - Resultado general y detalle de evaluacion
-    story += [
-        _header_360(nombre, cargo_intro, ancho_cont, empresa_intro),
-        spacer(0.32),
-        _card_360_descripcion(ancho_cont),
-        spacer(0.32),
-        _card_360_puntuacion(puntaje_global, banda_global, ancho_cont),
-        spacer(0.30),
-        Paragraph("Detalle de la evaluaci\u00f3n", ParagraphStyle(
-            "detalle_eval_title", fontName="Helvetica-Bold", fontSize=11.8,
-            textColor=INK, leading=14,
-        )),
-        spacer(0.18),
-        *_detalle_evaluacion_360(competencias, desglose, pesos, puntaje_global, ancho_cont, estilos, compact=True),
-    ]
-    # PAG 3 - Mapa de competencias
-    story += [
-        PageBreak(),
-        *_mapa_competencias_360_page(
+    if hay_disc:
+        if contenido_agregado:
+            nueva_pagina()
+        story += _disc_section_flow(contexto_integral, ancho_cont, estilos)
+        contenido_agregado = True
+
+    if hay_360:
+        if contenido_agregado:
+            nueva_pagina()
+            story += [
+                _header_360(nombre, cargo_intro, ancho_cont, empresa_intro),
+                spacer(0.32),
+            ]
+        story += [
+            _card_360_descripcion(ancho_cont),
+            spacer(0.32),
+            _card_360_puntuacion(puntaje_global, banda_global, ancho_cont),
+            spacer(0.30),
+            Paragraph("Detalle de la evaluaci\u00f3n", ParagraphStyle(
+                "detalle_eval_title", fontName="Helvetica-Bold", fontSize=11.8,
+                textColor=INK, leading=14,
+            )),
+            spacer(0.18),
+            *_detalle_evaluacion_360(competencias, desglose, pesos, puntaje_global, ancho_cont, estilos, compact=True),
+        ]
+        contenido_agregado = True
+        nueva_pagina()
+        story += _mapa_competencias_360_page(
             competencias,
             contexto_integral.get("promedios_organizacion_360", {}) if contexto_integral else {},
             ancho_cont,
             estilos,
-        ),
-    ]
-    for page in _items_360_pages(
-        contexto_integral.get("items_360", {}) if contexto_integral else {},
-        ancho_cont,
-        list(competencias.keys()),
-    ):
-        story += [PageBreak(), *page]
-    if contexto_integral:
-        story += [
-            PageBreak(),
-            *_objetivos_section_flow(
-                nombre,
-                contexto_integral.get("ficha", {}),
-                contexto_integral.get("objetivos", {}),
-                contexto_integral.get("objetivos_detalle", []),
-                ancho_cont,
-            ),
-        ]
+        )
+        for page in _items_360_pages(
+            contexto_integral.get("items_360", {}) if contexto_integral else {},
+            ancho_cont,
+            list(competencias.keys()),
+        ):
+            nueva_pagina()
+            story += page
+
+    if hay_objetivos:
+        if contenido_agregado:
+            nueva_pagina()
+        story += _objetivos_section_flow(
+            nombre,
+            contexto_integral.get("ficha", {}),
+            contexto_integral.get("objetivos", {}),
+            contexto_integral.get("objetivos_detalle", []),
+            ancho_cont,
+            incluir_header=contenido_agregado,
+        )
+        contenido_agregado = True
+
+    if not contenido_agregado:
+        story.append(Paragraph("No hay resultados disponibles para este colaborador en el proceso seleccionado.", estilos["body"]))
     doc.build(story)
     print(f"  OK  {ruta_salida}")
 
