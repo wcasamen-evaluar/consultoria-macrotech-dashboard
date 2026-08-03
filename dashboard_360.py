@@ -35,8 +35,8 @@ ARCHIVO_BASE = next(
     Path(__file__).parent.glob("Fase_I_Evaluaci*n_360__180__90__copia_.xlsx"),
     Path(__file__).with_name("Fase_I_Evaluación_360__180__90__copia_.xlsx"),
 )
-VERSION_CARGA_BASE = 5
-VERSION_CARGA_DB = 3
+VERSION_CARGA_BASE = 6
+VERSION_CARGA_DB = 4
 
 # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 # CONFIGURACIÃ“N DEL PROYECTO â€” editar aquÃ­ si cambia el proyecto
@@ -479,8 +479,18 @@ ESCALA_FONDO = ["#e8eafd", "#d9f2e5", "#d8f7ee", "#fff0c9", "#fce0ec"]
 ESCALA_TEXTO = ["#2f3ea0", "#006b3a", "#00795f", "#7a5200", "#8a003c"]
 ESCALA_MIN = [desde for desde, _, _, _ in ESCALA_RANGOS]
 
-OBJETIVOS_ESCALA_ORDEN = motor_objetivos.ESCALA_OBJETIVOS_ORDEN
-OBJETIVOS_ESCALA_COLORES = motor_objetivos.ESCALA_OBJETIVOS_COLORES
+OBJETIVOS_ESCALA_RANGOS = (
+    {"label": "Talento estrella", "desde": 100, "hasta": 101, "color": "#4b61d1"},
+    {"label": "Alto Desempeño", "desde": 90, "hasta": 100, "color": "#008a4b"},
+    {"label": "Satisfactorio", "desde": 85, "hasta": 90, "color": "#00b887"},
+    {"label": "En desarrollo", "desde": 75, "hasta": 85, "color": "#f4b324"},
+    {"label": "Espacio de crecimiento", "desde": 0, "hasta": 75, "color": "#d5005d"},
+)
+OBJETIVOS_ESCALA_ORDEN = [banda["label"] for banda in OBJETIVOS_ESCALA_RANGOS]
+OBJETIVOS_ESCALA_COLORES = {
+    banda["label"]: banda["color"]
+    for banda in OBJETIVOS_ESCALA_RANGOS
+}
 
 COLORES_TIPO = {
     "autoEvaluation":    "#6c3fc5",
@@ -544,7 +554,13 @@ def escala_label(v: float) -> str:
 
 
 def escala_objetivos_label(v: float) -> str:
-    return motor_objetivos.escala_objetivos_label(v)
+    puntaje = pd.to_numeric(pd.Series([v]), errors="coerce").iloc[0]
+    if pd.isna(puntaje):
+        return ""
+    for banda in OBJETIVOS_ESCALA_RANGOS:
+        if banda["desde"] <= puntaje < banda["hasta"]:
+            return banda["label"]
+    return ""
 
 
 POTENCIAL_ESCALAS = ["Potencial Alto", "Potencial Medio", "Potencial Bajo"]

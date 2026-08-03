@@ -1,3 +1,4 @@
+import ast
 import json
 import unittest
 from pathlib import Path
@@ -43,6 +44,23 @@ class EscalaObjetivosTest(unittest.TestCase):
         ]
 
         self.assertEqual(bandas_pdf, bandas_dashboard)
+
+    def test_el_dashboard_no_depende_de_constantes_cacheadas_del_modulo(self):
+        ruta = Path(__file__).resolve().parents[1] / "dashboard_360.py"
+        arbol = ast.parse(ruta.read_text(encoding="utf-8-sig"))
+        rangos_dashboard = None
+        for nodo in arbol.body:
+            if not isinstance(nodo, ast.Assign):
+                continue
+            if any(
+                isinstance(destino, ast.Name)
+                and destino.id == "OBJETIVOS_ESCALA_RANGOS"
+                for destino in nodo.targets
+            ):
+                rangos_dashboard = ast.literal_eval(nodo.value)
+                break
+
+        self.assertEqual(rangos_dashboard, objetivos.ESCALA_OBJETIVOS)
 
 
 if __name__ == "__main__":
