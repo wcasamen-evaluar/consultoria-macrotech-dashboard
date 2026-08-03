@@ -80,14 +80,25 @@ Pesos base por tipo de evaluador:
 
 Si falta algun tipo de evaluador para una competencia, su peso se redistribuye proporcionalmente entre los tipos presentes.
 
-Bandas de desempeno:
+Escala de resultados para Evaluacion de Desempeno:
 
 | Rango | Banda |
 | --- | --- |
-| 90-100 | Alto Desempeño |
-| 80-89.99 | Satisfactorio |
-| 70-79.99 | Bajo Desempeño |
-| < 70 | Insatisfactorio |
+| 100 | Talento estrella |
+| 90-99.99 | Alto Desempeño |
+| 85-89.99 | Satisfactorio |
+| 75-84.99 | En desarrollo |
+| 0-74.99 | Espacio de crecimiento |
+
+Escala de resultados para Objetivos:
+
+| Rango | Resultado |
+| --- | --- |
+| 100 | Talento estrella |
+| 90-99.99 | Alto Desempeño |
+| 85-89.99 | Satisfactorio |
+| 75-84.99 | En desarrollo |
+| 0-74.99 | Espacio de crecimiento |
 
 ## Nota Tecnica
 

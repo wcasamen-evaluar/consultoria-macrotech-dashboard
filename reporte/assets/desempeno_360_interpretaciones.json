@@ -1,39 +1,47 @@
 {
   "schema_version": 1,
-  "description": "Interpretaciones para la puntuación general de Evaluación 360. Los cortes coinciden con el dashboard: >=90, >=80, >=70 y <70.",
+  "description": "Interpretaciones para la puntuación general de Evaluación de Desempeño. Usa la escala oficial: 0-74, 75-84, 85-89, 90-99 y 100.",
   "description_text": "La Evaluación de Desempeño es una herramienta clave para reconocer los logros, identificar oportunidades de crecimiento e impulsar el desarrollo profesional. A través de este proceso, buscamos fortalecer el talento interno, alinear los objetivos individuales con los de la organización y fomentar una cultura de mejora continua.",
   "ranges": [
+    {
+      "key": "talento_estrella",
+      "label": "Talento estrella",
+      "from": 100,
+      "to": 101,
+      "title": "Desempeño excepcional",
+      "interpretation": "Alcanza el nivel máximo de desempeño. Sus resultados reflejan dominio consistente, una contribución excepcional y un impacto sobresaliente en el equipo y la organización. Conviene reconocer sus logros y considerar oportunidades de mayor alcance."
+    },
     {
       "key": "alto_desempeno",
       "label": "Alto Desempeño",
       "from": 90,
-      "to": 101,
-      "title": "Excelente desempeño",
-      "interpretation": "Cumple o supera las expectativas de manera consistente. Sus resultados reflejan fortalezas claras y un aporte destacado al equipo y a la organización. Conviene mantener el nivel actual, reconocer sus logros y considerar oportunidades para asumir nuevos retos."
+      "to": 100,
+      "title": "Desempeño destacado",
+      "interpretation": "Cumple o supera las expectativas de manera consistente. Sus resultados reflejan fortalezas claras y un aporte destacado al equipo y a la organización. Conviene mantener el nivel actual y continuar desarrollando nuevos retos."
     },
     {
       "key": "satisfactorio",
-      "label": "Desempeño satisfactorio",
-      "from": 80,
+      "label": "Satisfactorio",
+      "from": 85,
       "to": 90,
       "title": "Desempeño satisfactorio",
       "interpretation": "Cumple adecuadamente con las expectativas del rol. Presenta un desempeño estable, con oportunidades puntuales de mejora que pueden potenciarse mediante acompañamiento, foco en prioridades y seguimiento de compromisos."
     },
     {
-      "key": "bajo_desempeno",
-      "label": "Bajo desempeño",
-      "from": 70,
-      "to": 80,
-      "title": "Requiere fortalecimiento",
-      "interpretation": "Se observan brechas relevantes frente a las expectativas del rol. Es recomendable definir acciones de mejora concretas, priorizar competencias críticas y realizar seguimiento frecuente para acompañar su progreso."
+      "key": "en_desarrollo",
+      "label": "En desarrollo",
+      "from": 75,
+      "to": 85,
+      "title": "Requiere desarrollo",
+      "interpretation": "Se observan avances y capacidades en proceso de consolidación, junto con brechas relevantes frente a las expectativas del rol. Es recomendable definir acciones concretas y realizar seguimiento frecuente para acompañar su progreso."
     },
     {
-      "key": "insatisfactorio",
-      "label": "Desempeño insatisfactorio",
+      "key": "espacio_crecimiento",
+      "label": "Espacio de crecimiento",
       "from": 0,
-      "to": 70,
+      "to": 75,
       "title": "Atención prioritaria",
-      "interpretation": "El resultado se encuentra por debajo del nivel esperado. Se requiere un plan de acción inmediato, con metas claras, acompañamiento cercano y revisiones periódicas para corregir brechas de desempeño."
+      "interpretation": "El resultado se encuentra por debajo del nivel esperado. Se requiere un plan de acción con metas claras, acompañamiento cercano y revisiones periódicas para fortalecer las brechas de desempeño."
     }
   ]
 }

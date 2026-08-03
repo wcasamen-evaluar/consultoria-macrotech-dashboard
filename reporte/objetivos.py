@@ -21,6 +21,30 @@ COLUMNAS_OBJETIVOS = [
     "calificacion_porcentaje",
 ]
 
+ESCALA_OBJETIVOS = (
+    {"label": "Talento estrella", "desde": 100, "hasta": 101, "color": "#4b61d1"},
+    {"label": "Alto Desempeño", "desde": 90, "hasta": 100, "color": "#008a4b"},
+    {"label": "Satisfactorio", "desde": 85, "hasta": 90, "color": "#00b887"},
+    {"label": "En desarrollo", "desde": 75, "hasta": 85, "color": "#f4b324"},
+    {"label": "Espacio de crecimiento", "desde": 0, "hasta": 75, "color": "#d5005d"},
+)
+ESCALA_OBJETIVOS_ORDEN = [banda["label"] for banda in ESCALA_OBJETIVOS]
+ESCALA_OBJETIVOS_COLORES = {
+    banda["label"]: banda["color"]
+    for banda in ESCALA_OBJETIVOS
+}
+
+
+def escala_objetivos_label(valor: object) -> str:
+    """Clasifica un resultado de objetivos con la escala oficial 0-100."""
+    puntaje = pd.to_numeric(pd.Series([valor]), errors="coerce").iloc[0]
+    if pd.isna(puntaje):
+        return ""
+    for banda in ESCALA_OBJETIVOS:
+        if banda["desde"] <= puntaje < banda["hasta"]:
+            return banda["label"]
+    return ""
+
 
 def limpiar_texto(valor: object) -> object:
     if not isinstance(valor, str):

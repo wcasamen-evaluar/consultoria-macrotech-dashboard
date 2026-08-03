@@ -10,7 +10,6 @@ Lo usan:
 
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 
 
@@ -43,10 +42,11 @@ TIPOS_DISPLAY = {
 }
 
 BANDAS = [
-    (90, 101, "Alto Desempeño", "#1F4E79"),
-    (80, 90, "Satisfactorio", "#375623"),
-    (70, 80, "Bajo Desempeño", "#7F3F00"),
-    (0, 70, "Insatisfactorio", "#7B0000"),
+    (100, 101, "Talento estrella", "#4B61D1"),
+    (90, 100, "Alto Desempeño", "#008A4B"),
+    (85, 90, "Satisfactorio", "#00B887"),
+    (75, 85, "En desarrollo", "#F4B324"),
+    (0, 75, "Espacio de crecimiento", "#D5005D"),
 ]
 
 HOJAS_EVALUACION = ("Desempeño", "Resultado consulta", "datos")
@@ -72,12 +72,7 @@ COLUMNAS_EXPORTACION_EVALUAR = [
     "respuesta_valor",
     "calificacion_porcentaje",
 ]
-ESCALA_DASHBOARD = [
-    "Alto desempeño",
-    "Desempeño satisfactorio",
-    "Bajo desempeño",
-    "Desempeño insatisfactorio",
-]
+ESCALA_DASHBOARD = [etiqueta for _, _, etiqueta, _ in BANDAS]
 
 
 # ---------------------------------------------------------------------------
@@ -89,7 +84,7 @@ def clasificar(puntaje: float) -> dict:
     for lo, hi, etiqueta, color in BANDAS:
         if lo <= puntaje < hi:
             return {"etiqueta": etiqueta, "color": color}
-    return {"etiqueta": "Alto Desempeño", "color": "#1F4E79"}
+    return {"etiqueta": "Sin clasificación", "color": "#6B7280"}
 
 
 def limpiar_nombre_competencia(nombre: str) -> str:
@@ -122,13 +117,10 @@ def calcular_pesos_redistribuidos(tipos_presentes: list, weights: dict | None = 
 
 
 def _idx_escala(puntaje: float) -> int:
-    if puntaje >= 90:
-        return 0
-    if puntaje >= 80:
-        return 1
-    if puntaje >= 70:
-        return 2
-    return 3
+    for indice, (desde, hasta, _, _) in enumerate(BANDAS):
+        if desde <= puntaje < hasta:
+            return indice
+    return len(BANDAS) - 1
 
 
 # ---------------------------------------------------------------------------
@@ -278,6 +270,55 @@ def leer_exportacion_dashboard(ruta: str | Path) -> pd.DataFrame:
 # Motor para informes PDF
 # ---------------------------------------------------------------------------
 
+def _calcular_competencias_ponderadas(
+    df: pd.DataFrame,
+    weights: dict | None = None,
+) -> pd.DataFrame:
+    """Calcula competencias sin redondeos intermedios para todas las salidas."""
+    weights = weights or PESOS_BASE
+    tipos_activos = {t: w for t, w in weights.items() if w > 0}
+
+    paso1 = (
+        df.groupby(["nombre_colaborador", "competencia", "tipo_evaluacion"])
+        ["puntaje"]
+        .mean()
+        .reset_index()
+        .rename(columns={"puntaje": "prom_items"})
+    )
+
+    registros = []
+    for (col, comp), grp in paso1.groupby(["nombre_colaborador", "competencia"]):
+        presentes = [t for t in tipos_activos if t in grp["tipo_evaluacion"].values]
+        if not presentes:
+            continue
+        pesos_redistribuidos = calcular_pesos_redistribuidos(presentes, weights)
+        puntaje = 0.0
+        desglose = {}
+        for tipo in presentes:
+            valor = grp.loc[grp["tipo_evaluacion"] == tipo, "prom_items"].values[0]
+            puntaje += valor * pesos_redistribuidos[tipo]
+            desglose[tipo] = valor
+        registros.append({
+            "colaborador": col,
+            "competencia": comp,
+            "puntaje": puntaje,
+            **{f"tipo_{tipo}": desglose.get(tipo) for tipo in tipos_activos},
+        })
+
+    return pd.DataFrame(registros)
+
+
+def _calcular_globales(df_comp: pd.DataFrame) -> pd.DataFrame:
+    """Promedia competencias conservando la misma precisión en cada superficie."""
+    return (
+        df_comp.groupby("colaborador")["puntaje"]
+        .mean()
+        .reset_index()
+        .rename(columns={"puntaje": "global"})
+        .sort_values("global", ascending=False)
+    )
+
+
 def calcular_colaborador(df_col: pd.DataFrame) -> dict:
     """
     Calcula el resultado individual de un colaborador.
@@ -285,30 +326,34 @@ def calcular_colaborador(df_col: pd.DataFrame) -> dict:
     df_col = normalizar_dataframe(df_col, verbose=False) if "puntaje" not in df_col.columns else df_col.copy()
     competencias_unicas = sorted(df_col["competencia"].unique())
     tipos_presentes_global = df_col["tipo_evaluacion"].unique().tolist()
+    df_comp_calculo = _calcular_competencias_ponderadas(df_col)
+    puntajes_comp_sin_redondear = (
+        df_comp_calculo.set_index("competencia")["puntaje"].to_dict()
+    )
 
     resultados_competencias = {}
 
     for competencia in competencias_unicas:
         df_comp = df_col[df_col["competencia"] == competencia]
 
-        puntaje_por_tipo = {}
+        puntaje_por_tipo_sin_redondear = {}
         for tipo in df_comp["tipo_evaluacion"].unique():
             items = df_comp[df_comp["tipo_evaluacion"] == tipo]["puntaje"]
-            puntaje_por_tipo[tipo] = round(float(items.mean()), 2)
+            puntaje_por_tipo_sin_redondear[tipo] = float(items.mean())
 
-        tipos_en_comp = list(puntaje_por_tipo.keys())
+        tipos_en_comp = list(puntaje_por_tipo_sin_redondear.keys())
         pesos = calcular_pesos_redistribuidos(tipos_en_comp)
 
-        puntaje_comp = sum(puntaje_por_tipo[t] * pesos[t] for t in tipos_en_comp)
-        puntaje_comp = round(puntaje_comp, 2)
+        puntaje_comp_sin_redondear = puntajes_comp_sin_redondear[competencia]
+        puntaje_comp = round(puntaje_comp_sin_redondear, 2)
 
         resultados_competencias[competencia] = {
             "puntaje": puntaje_comp,
-            "clasificacion": clasificar(puntaje_comp),
+            "clasificacion": clasificar(puntaje_comp_sin_redondear),
             "desglose_tipo": {
-                TIPOS_DISPLAY.get(t, t): puntaje_por_tipo[t]
+                TIPOS_DISPLAY.get(t, t): round(puntaje_por_tipo_sin_redondear[t], 2)
                 for t in PESOS_BASE
-                if t in puntaje_por_tipo
+                if t in puntaje_por_tipo_sin_redondear
             },
             "pesos_aplicados": {
                 TIPOS_DISPLAY.get(t, t): round(pesos[t] * 100, 1)
@@ -316,8 +361,10 @@ def calcular_colaborador(df_col: pd.DataFrame) -> dict:
             },
         }
 
-    puntajes_comp = [v["puntaje"] for v in resultados_competencias.values()]
-    puntaje_global = round(float(np.mean(puntajes_comp)), 2)
+    puntaje_global_sin_redondear = float(
+        _calcular_globales(df_comp_calculo)["global"].iloc[0]
+    )
+    puntaje_global = round(puntaje_global_sin_redondear, 2)
 
     desglose_global = {}
     for tipo in PESOS_BASE:
@@ -329,7 +376,7 @@ def calcular_colaborador(df_col: pd.DataFrame) -> dict:
 
     return {
         "puntaje_global": puntaje_global,
-        "clasificacion": clasificar(puntaje_global),
+        "clasificacion": clasificar(puntaje_global_sin_redondear),
         "competencias": resultados_competencias,
         "desglose_global": desglose_global,
         "pesos_aplicados": {
@@ -397,44 +444,11 @@ def calcular_dashboard(df: pd.DataFrame, weights: dict | None = None) -> dict:
     weights = weights or PESOS_BASE
     tipos_activos = {t: w for t, w in weights.items() if w > 0}
 
-    paso1 = (
-        df.groupby(["nombre_colaborador", "competencia", "tipo_evaluacion"])
-        ["puntaje"]
-        .mean()
-        .reset_index()
-        .rename(columns={"puntaje": "prom_items"})
-    )
-
-    registros = []
-    for (col, comp), grp in paso1.groupby(["nombre_colaborador", "competencia"]):
-        presentes = [t for t in tipos_activos if t in grp["tipo_evaluacion"].values]
-        if not presentes:
-            continue
-        pesos_redistribuidos = calcular_pesos_redistribuidos(presentes, weights)
-        puntaje = 0.0
-        desglose = {}
-        for tipo in presentes:
-            valor = grp.loc[grp["tipo_evaluacion"] == tipo, "prom_items"].values[0]
-            puntaje += valor * pesos_redistribuidos[tipo]
-            desglose[tipo] = valor
-        registros.append({
-            "colaborador": col,
-            "competencia": comp,
-            "puntaje": puntaje,
-            **{f"tipo_{tipo}": desglose.get(tipo) for tipo in tipos_activos},
-        })
-
-    df_comp = pd.DataFrame(registros)
+    df_comp = _calcular_competencias_ponderadas(df, weights)
     if df_comp.empty:
         raise ValueError("No hay datos validos para calcular indicadores.")
 
-    df_global = (
-        df_comp.groupby("colaborador")["puntaje"]
-        .mean()
-        .reset_index()
-        .rename(columns={"puntaje": "global"})
-        .sort_values("global", ascending=False)
-    )
+    df_global = _calcular_globales(df_comp)
 
     df_comp_prom = (
         df_comp.groupby("competencia")["puntaje"]

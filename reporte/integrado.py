@@ -44,14 +44,14 @@ CONFIG_INTEGRADO = {
 
 NINEBOX_LABELS = {
     1: "Super Estrella",
-    2: "Alto potencial",
-    3: "Potencial por activar",
-    4: "Alto desempeno",
-    5: "Talento clave",
-    6: "Desarrollo dirigido",
-    7: "Especialista",
-    8: "Riesgo de desempeno",
-    9: "Bajo ajuste",
+    2: "Estrella del futuro",
+    3: "Enigma",
+    4: "Estrella en su área",
+    5: "Colaborador clave",
+    6: "Dilema",
+    7: "Comprometido",
+    8: "Eficaz",
+    9: "Bajo rendimiento",
 }
 
 
@@ -101,15 +101,7 @@ def _match_key_from_row(row: pd.Series) -> str:
 
 
 def escala_objetivos_label(valor: float) -> str:
-    if pd.isna(valor):
-        return ""
-    if valor >= 90:
-        return "Alto Desempeno"
-    if valor >= 80:
-        return "Desempeno satisfactorio"
-    if valor >= 70:
-        return "Bajo desempeno"
-    return "Desempeno insatisfactorio"
+    return motor_objetivos.escala_objetivos_label(valor)
 
 
 def preparar_resultado_integrado(
@@ -344,6 +336,21 @@ def _registro_por_llaves(df: pd.DataFrame, match_nombre: str, emails: set[str]) 
     return _registro_por_match(datos, match_nombre)
 
 
+def _dato_real(*valores: Any, default: str = "") -> Any:
+    for valor in valores:
+        if valor is None:
+            continue
+        if isinstance(valor, float) and pd.isna(valor):
+            continue
+        texto = str(valor).strip()
+        if not texto:
+            continue
+        if texto.casefold() in {"sin dato", "nan", "none", "null", "-"}:
+            continue
+        return valor
+    return default
+
+
 def _competencias_potencial_colaborador(df_comp: pd.DataFrame, match: str) -> list[dict[str, Any]]:
     if df_comp.empty:
         return []
@@ -550,13 +557,13 @@ def cargar_base_reportes(ruta_excel: str | Path | None = None) -> dict[str, Any]
         objetivos = _registro_por_llaves(res_objetivos["df_colaboradores"], match, emails)
         ninebox = _registro_por_match(df_ninebox, match)
         ficha = {
-            "cargo": integrado.get("cargo") or integrado.get("cargo_objetivo") or potencial.get("cargo") or objetivos.get("cargo_objetivo") or "",
-            "area": integrado.get("area") or potencial.get("area") or "",
-            "empresa": integrado.get("empresa") or potencial.get("empresa") or "",
-            "pais": integrado.get("pais") or potencial.get("pais") or "",
-            "grupo": integrado.get("grupo") or potencial.get("grupo") or "",
-            "jefe": integrado.get("jefe") or potencial.get("jefe") or objetivos.get("jefe") or "",
-            "gente_a_cargo": integrado.get("gente_a_cargo") or "",
+            "cargo": _dato_real(integrado.get("cargo"), integrado.get("cargo_objetivo"), potencial.get("cargo"), objetivos.get("cargo_objetivo")),
+            "area": _dato_real(integrado.get("area"), potencial.get("area")),
+            "empresa": _dato_real(integrado.get("empresa"), potencial.get("empresa"), default="Macrotech"),
+            "pais": _dato_real(integrado.get("pais"), potencial.get("pais")),
+            "grupo": _dato_real(integrado.get("grupo"), potencial.get("grupo")),
+            "jefe": _dato_real(integrado.get("jefe"), potencial.get("jefe"), objetivos.get("jefe")),
+            "gente_a_cargo": _dato_real(integrado.get("gente_a_cargo")),
         }
         competencias_potencial = _competencias_potencial_por_llaves(
             res_potencial["df_competencias"], match, emails

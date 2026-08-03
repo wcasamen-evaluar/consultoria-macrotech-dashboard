@@ -1,39 +1,47 @@
 {
   "schema_version": 1,
-  "description": "Interpretaciones para la puntuación general de Objetivos. Usa los mismos cortes del dashboard: >=90, >=80, >=70 y <70.",
+  "description": "Interpretaciones para la puntuación general de Objetivos. Usa la escala oficial: 0-74, 75-84, 85-89, 90-99 y 100.",
   "description_text": "Proceso orientado a revisar el nivel de cumplimiento de las responsabilidades y metas definidas para cada colaborador, conectando los resultados individuales con las prioridades del cargo y de la organización.",
   "ranges": [
     {
-      "key": "alto_desempeno",
-      "label": "Alto cumplimiento",
-      "from": 90,
+      "key": "talento_estrella",
+      "label": "Talento estrella",
+      "from": 100,
       "to": 101,
+      "title": "Cumplimiento excepcional",
+      "interpretation": "Alcanza el cumplimiento total de sus objetivos. Sus resultados reflejan una ejecución excepcional, consistencia y una contribución sobresaliente frente a las metas definidas para el período."
+    },
+    {
+      "key": "alto_desempeno",
+      "label": "Alto Desempeño",
+      "from": 90,
+      "to": 100,
       "title": "Cumplimiento destacado",
-      "interpretation": "Cumple o supera las metas establecidas. Sus resultados muestran un nivel sobresaliente de ejecución, foco y responsabilidad frente a los compromisos definidos para el período."
+      "interpretation": "Presenta un nivel alto de cumplimiento de sus objetivos. Sus resultados muestran solidez, foco y una ejecución destacada frente a los compromisos definidos para el período."
     },
     {
       "key": "satisfactorio",
-      "label": "Cumplimiento satisfactorio",
-      "from": 80,
+      "label": "Satisfactorio",
+      "from": 85,
       "to": 90,
-      "title": "Buen avance",
-      "interpretation": "Presenta un cumplimiento adecuado de los objetivos. Se observan resultados sólidos, con oportunidades puntuales para fortalecer seguimiento, consistencia y cierre de compromisos."
+      "title": "Cumplimiento satisfactorio",
+      "interpretation": "Cumple adecuadamente sus objetivos. Se observan resultados consistentes, con oportunidades puntuales para fortalecer el seguimiento y alcanzar niveles superiores de cumplimiento."
     },
     {
-      "key": "bajo_desempeno",
-      "label": "Cumplimiento emergente",
-      "from": 70,
-      "to": 80,
-      "title": "Requiere impulso",
-      "interpretation": "Avanza en el cumplimiento de sus objetivos, aunque aún existen brechas relevantes. Es recomendable priorizar metas críticas, acordar acciones concretas y revisar avances con mayor frecuencia."
+      "key": "en_desarrollo",
+      "label": "En desarrollo",
+      "from": 75,
+      "to": 85,
+      "title": "Requiere desarrollo",
+      "interpretation": "Muestra avances en el cumplimiento de sus objetivos, aunque persisten brechas relevantes. Es recomendable priorizar metas críticas, acordar acciones concretas y revisar avances con mayor frecuencia."
     },
     {
-      "key": "insatisfactorio",
-      "label": "Bajo cumplimiento",
+      "key": "espacio_crecimiento",
+      "label": "Espacio de crecimiento",
       "from": 0,
-      "to": 70,
+      "to": 75,
       "title": "Atención prioritaria",
-      "interpretation": "El cumplimiento se encuentra por debajo de lo esperado. Se requiere un plan de acción inmediato, con metas claras, acompañamiento cercano y seguimiento sistemático."
+      "interpretation": "El cumplimiento se encuentra por debajo del nivel esperado. Se requiere un plan de acción con metas claras, acompañamiento cercano y seguimiento sistemático para fortalecer los resultados."
     }
   ]
 }

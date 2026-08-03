@@ -35,8 +35,8 @@ ARCHIVO_BASE = next(
     Path(__file__).parent.glob("Fase_I_Evaluaci*n_360__180__90__copia_.xlsx"),
     Path(__file__).with_name("Fase_I_Evaluación_360__180__90__copia_.xlsx"),
 )
-VERSION_CARGA_BASE = 4
-VERSION_CARGA_DB = 2
+VERSION_CARGA_BASE = 5
+VERSION_CARGA_DB = 3
 
 # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 # CONFIGURACIÃ“N DEL PROYECTO â€” editar aquÃ­ si cambia el proyecto
@@ -466,12 +466,21 @@ TIPO_LABEL = {
     "insideClients":     "Cliente interno",
 }
 
-ESCALA_LABELS  = ["Alto desempeño", "Desempeño satisfactorio", "Bajo desempeño", "Desempeño insatisfactorio"]
-# Azul=alto >=90 | Verde=satisfactorio 80-90 | Ambar=bajo 70-80 | Rojo=insatisfactorio <70
-ESCALA_COLORES = ["#185fa5", "#1d9e75", "#ba7517", "#a32d2d"]
-ESCALA_FONDO   = ["#ddeeff",  "#e1f5ee", "#faeeda", "#fcebeb"]   # fondos para chips/bandas
-ESCALA_TEXTO   = ["#0c447c",  "#085041", "#633806", "#791f1f"]   # textos sobre fondo claro
-ESCALA_MIN     = [90, 80, 70, 0]
+ESCALA_RANGOS = [
+    (100, 101, "Talento estrella", "#4B61D1"),
+    (90, 100, "Alto Desempeño", "#008A4B"),
+    (85, 90, "Satisfactorio", "#00B887"),
+    (75, 85, "En desarrollo", "#F4B324"),
+    (0, 75, "Espacio de crecimiento", "#D5005D"),
+]
+ESCALA_LABELS = [etiqueta for _, _, etiqueta, _ in ESCALA_RANGOS]
+ESCALA_COLORES = [color for _, _, _, color in ESCALA_RANGOS]
+ESCALA_FONDO = ["#e8eafd", "#d9f2e5", "#d8f7ee", "#fff0c9", "#fce0ec"]
+ESCALA_TEXTO = ["#2f3ea0", "#006b3a", "#00795f", "#7a5200", "#8a003c"]
+ESCALA_MIN = [desde for desde, _, _, _ in ESCALA_RANGOS]
+
+OBJETIVOS_ESCALA_ORDEN = motor_objetivos.ESCALA_OBJETIVOS_ORDEN
+OBJETIVOS_ESCALA_COLORES = motor_objetivos.ESCALA_OBJETIVOS_COLORES
 
 COLORES_TIPO = {
     "autoEvaluation":    "#6c3fc5",
@@ -498,10 +507,10 @@ def clean_comp_name(s: str) -> str:
 
 
 def get_escala(v: float) -> int:
-    if v >= 90: return 0
-    if v >= 80: return 1
-    if v >= 70: return 2
-    return 3
+    for indice, (desde, hasta, _, _) in enumerate(ESCALA_RANGOS):
+        if desde <= v < hasta:
+            return indice
+    return len(ESCALA_RANGOS) - 1
 
 
 def score_color(v: float) -> str:
@@ -535,13 +544,7 @@ def escala_label(v: float) -> str:
 
 
 def escala_objetivos_label(v: float) -> str:
-    if v >= 90:
-        return "Alto Desempeño"
-    if v >= 80:
-        return "Desempeño satisfactorio"
-    if v >= 70:
-        return "Bajo desempeño"
-    return "Desempeño insatisfactorio"
+    return motor_objetivos.escala_objetivos_label(v)
 
 
 POTENCIAL_ESCALAS = ["Potencial Alto", "Potencial Medio", "Potencial Bajo"]
@@ -1196,20 +1199,20 @@ def fig_curva_desarrollo(tabla: pd.DataFrame, competencia: str) -> go.Figure:
 
 
 NINEBOX_COLORES = {
-    1: "#00b050", 2: "#c6e0b4", 3: "#f2f2f2",
-    4: "#5b9bd5", 5: "#ffc000", 6: "#f4b6e8",
-    7: "#1f66d1", 8: "#c00000", 9: "#ff0000",
+    1: "#4EA72F", 2: "#C5E0B3", 3: "#EAEAEA",
+    4: "#528139", 5: "#FFC000", 6: "#FF99FF",
+    7: "#0071C0", 8: "#9F2522", 9: "#FE0000",
 }
 NINEBOX_LABELS = {
     1: "Super Estrella",
-    2: "Alto potencial",
-    3: "Potencial por activar",
-    4: "Alto desempeño",
-    5: "Talento clave",
-    6: "Desarrollo dirigido",
-    7: "Especialista",
-    8: "Riesgo de desempeño",
-    9: "Bajo ajuste",
+    2: "Estrella del futuro",
+    3: "Enigma",
+    4: "Estrella en su área",
+    5: "Colaborador clave",
+    6: "Dilema",
+    7: "Comprometido",
+    8: "Eficaz",
+    9: "Bajo rendimiento",
 }
 
 
@@ -1522,7 +1525,7 @@ def fig_ninebox(df_clasificado: pd.DataFrame) -> go.Figure:
             conteo = int(conteos.loc[fila, columna])
             pct = conteo / total
             label = NINEBOX_LABELS[cuadrante]
-            color_texto = "#ffffff" if cuadrante in {1, 4, 7, 8, 9} else "#07133a"
+            color_texto = "#111111"
             fig.add_annotation(
                 x=j,
                 y=i,
@@ -1567,6 +1570,7 @@ def fig_ninebox(df_clasificado: pd.DataFrame) -> go.Figure:
 def calcular(df: pd.DataFrame, weights: dict) -> dict:
     """Calcula el dashboard usando el motor compartido del proyecto."""
     res = motor_360.calcular_dashboard(df, weights)
+    res["df_global"]["escala_idx"] = res["df_global"]["global"].apply(get_escala)
     res["df_global"]["escala"] = res["df_global"]["escala_idx"].apply(lambda i: ESCALA_LABELS[i])
     if {"nombre_colaborador", "email_colaborador"}.issubset(df.columns):
         correos_360 = (
@@ -1917,7 +1921,7 @@ def cargar_datos_dashboard() -> tuple[dict, dict, dict, dict]:
 # GRÃFICOS
 # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 def fig_escala(df_global: pd.DataFrame) -> go.Figure:
-    counts = [len(df_global[df_global["escala_idx"] == i]) for i in range(4)]
+    counts = [len(df_global[df_global["escala_idx"] == i]) for i in range(len(ESCALA_LABELS))]
     max_count = max(counts) if counts else 0
     x_max = max(5, int(np.ceil(max_count * 1.12)))
     layout = PLOTLY_LAYOUT.copy()
@@ -1956,22 +1960,17 @@ def fig_relaciones(rel_prom: dict) -> go.Figure:
     labels = [TIPO_LABEL[t] for t in tipos]
     vals   = [rel_prom[t] for t in tipos]
 
-    # Bandas de fondo por escala â€” misma paleta que chips y barras
-    BANDA_ALTO  = "rgba(24,  95, 165, 0.12)"   # azul  â€” â‰¥ 90
-    BANDA_SAT   = "rgba(29, 158, 117, 0.12)"   # verde â€” 80â€“90
-    BANDA_BAJO  = "rgba(186,117,  23, 0.12)"   # Ã¡mbar â€” 70â€“80
-    BANDA_INSAT = "rgba(163, 45,  45, 0.12)"   # rojo  â€” < 70
-
     Y_MIN, Y_MAX = 60, 102
 
     fig = go.Figure()
 
     # â”€â”€ Bandas de fondo por escala â”€â”€
     bandas = [
-        (90, Y_MAX, BANDA_ALTO,  "Alto desempeño"),
-        (80, 90,    BANDA_SAT,   "Desempeño satisfactorio"),
-        (70, 80,    BANDA_BAJO,  "Bajo desempeño"),
-        (Y_MIN, 70, "rgba(163, 45, 45, 0.12)", "Desempeño insatisfactorio"),
+        (100, Y_MAX, "rgba(75, 97, 209, 0.12)", "Talento estrella"),
+        (90, 100, "rgba(0, 138, 75, 0.12)", "Alto Desempeño"),
+        (85, 90, "rgba(0, 184, 135, 0.12)", "Satisfactorio"),
+        (75, 85, "rgba(244, 179, 36, 0.12)", "En desarrollo"),
+        (Y_MIN, 75, "rgba(213, 0, 93, 0.10)", "Espacio de crecimiento"),
     ]
     for y0, y1, color, nombre in bandas:
         fig.add_hrect(
@@ -1984,7 +1983,7 @@ def fig_relaciones(rel_prom: dict) -> go.Figure:
         )
 
     # â”€â”€ LÃ­neas de corte sutiles â”€â”€
-    for corte in [70, 80, 90]:
+    for corte in [75, 85, 90, 100]:
         fig.add_hline(
             y=corte,
             line_dash="dot",
@@ -2145,18 +2144,12 @@ def fig_colab_radar(df_comp: pd.DataFrame, colaborador: str) -> go.Figure:
 
 
 def fig_objetivos_distribucion(df_colab: pd.DataFrame) -> go.Figure:
-    bins = pd.cut(
-        df_colab["puntaje"],
-        bins=[-0.01, 69.99, 79.99, 89.99, 100.0],
-        labels=["Desempeño insatisfactorio", "Bajo desempeño", "Desempeño satisfactorio", "Alto Desempeño"],
-    )
-    orden = ["Alto Desempeño", "Desempeño satisfactorio", "Bajo desempeño", "Desempeño insatisfactorio"]
-    colores = ["#1f66d1", "#00b050", "#ffc000", "#ff0000"]
-    conteos = bins.value_counts().reindex(orden, fill_value=0)
+    etiquetas = df_colab["puntaje"].map(escala_objetivos_label)
+    conteos = etiquetas.value_counts().reindex(OBJETIVOS_ESCALA_ORDEN, fill_value=0)
     fig = go.Figure(go.Bar(
-        x=orden,
+        x=OBJETIVOS_ESCALA_ORDEN,
         y=conteos.values,
-        marker_color=colores,
+        marker_color=[OBJETIVOS_ESCALA_COLORES[label] for label in OBJETIVOS_ESCALA_ORDEN],
         text=conteos.values,
         textposition="outside",
         hovertemplate="%{x}<br>%{y} colaboradores<extra></extra>",
@@ -2172,19 +2165,23 @@ def fig_objetivos_distribucion(df_colab: pd.DataFrame) -> go.Figure:
 
 
 def fig_objetivos_bullet(promedio: float) -> go.Figure:
+    color_resultado = OBJETIVOS_ESCALA_COLORES.get(
+        escala_objetivos_label(promedio),
+        "#1f3f77",
+    )
     fig = go.Figure(go.Indicator(
         mode="number+gauge",
         value=float(promedio),
         number={"valueformat": ".0f", "font": {"size": 18, "color": "#1a1a3e"}},
         gauge={
             "shape": "bullet",
-            "axis": {"range": [50, 100], "tickmode": "array", "tickvals": [50, 60, 70, 80, 90, 100]},
-            "bar": {"color": "#1f3f77", "thickness": 0.42},
+            "axis": {"range": [0, 100], "tickmode": "array", "tickvals": [0, 25, 50, 75, 85, 90, 100]},
+            "bar": {"color": color_resultado, "thickness": 0.42},
             "steps": [
-                {"range": [50, 70], "color": "#ff7276"},
-                {"range": [70, 80], "color": "#ffe180"},
-                {"range": [80, 90], "color": "#7fd3a1"},
-                {"range": [90, 100], "color": "#82a9e6"},
+                {"range": [0, 75], "color": "#f7bfd7"},
+                {"range": [75, 85], "color": "#fbe1a7"},
+                {"range": [85, 90], "color": "#a9edd9"},
+                {"range": [90, 100], "color": "#a8ddc2"},
             ],
         },
         domain={"x": [0.05, 0.95], "y": [0.2, 0.85]},
@@ -2366,30 +2363,14 @@ def render_tabla_dimension_objetivos(
 
 def render_tabla_escala_objetivos(df_colab: pd.DataFrame) -> None:
     st.markdown("**Escala de objetivos**")
-    escala = pd.Series(index=[
-        "Alto Desempeño",
-        "Desempeño satisfactorio",
-        "Bajo desempeño",
-        "Desempeño insatisfactorio",
-    ], dtype=int)
-    etiquetas = pd.cut(
-        df_colab["puntaje"],
-        bins=[-0.01, 69.99, 79.99, 89.99, 100.0],
-        labels=["Desempeño insatisfactorio", "Bajo desempeño", "Desempeño satisfactorio", "Alto Desempeño"],
-    )
-    conteos = etiquetas.value_counts().reindex(escala.index, fill_value=0)
-    colores = {
-        "Alto Desempeño": "#1f66d1",
-        "Desempeño satisfactorio": "#00b050",
-        "Bajo desempeño": "#ffc000",
-        "Desempeño insatisfactorio": "#ff0000",
-    }
+    etiquetas = df_colab["puntaje"].map(escala_objetivos_label)
+    conteos = etiquetas.value_counts().reindex(OBJETIVOS_ESCALA_ORDEN, fill_value=0)
     html = '<div style="overflow-x:auto"><table class="ev-table">'
     html += "<thead><tr><th>Escala de objetivos</th><th style='text-align:right'>Colaboradores</th></tr></thead><tbody>"
     for etiqueta, conteo in conteos.items():
         html += (
             "<tr>"
-            f"<td style='font-weight:600;color:{colores[etiqueta]}'>{etiqueta}</td>"
+            f"<td style='font-weight:600;color:{OBJETIVOS_ESCALA_COLORES[etiqueta]}'>{etiqueta}</td>"
             f"<td style='text-align:right'>{int(conteo)}</td>"
             "</tr>"
         )
@@ -2525,13 +2506,11 @@ def fig_integrada_bullet(promedio: float, titulo: str) -> go.Figure:
 
 
 def fig_integrada_escala(df: pd.DataFrame) -> go.Figure:
-    orden = ["Alto Desempeño", "Desempeño satisfactorio", "Bajo desempeño", "Desempeño insatisfactorio"]
-    colores = ["#1f66d1", "#00b050", "#ffc000", "#ff0000"]
-    conteos = df["escala_integrada"].value_counts().reindex(orden, fill_value=0)
+    conteos = df["escala_integrada"].value_counts().reindex(OBJETIVOS_ESCALA_ORDEN, fill_value=0)
     fig = go.Figure(go.Bar(
-        x=orden,
+        x=OBJETIVOS_ESCALA_ORDEN,
         y=conteos.values,
-        marker_color=colores,
+        marker_color=[OBJETIVOS_ESCALA_COLORES[label] for label in OBJETIVOS_ESCALA_ORDEN],
         text=conteos.values,
         textposition="outside",
         hovertemplate="%{x}<br>%{y} colaboradores<extra></extra>",
@@ -2583,20 +2562,13 @@ CONFIG_INTEGRADO = {
 
 
 def render_tabla_escala_integrada(df: pd.DataFrame, titulo: str) -> None:
-    orden = ["Alto Desempeño", "Desempeño satisfactorio", "Bajo desempeño", "Desempeño insatisfactorio"]
-    colores = {
-        "Alto Desempeño": "#1f66d1",
-        "Desempeño satisfactorio": "#00b050",
-        "Bajo desempeño": "#ffc000",
-        "Desempeño insatisfactorio": "#ff0000",
-    }
-    conteos = df["escala_integrada"].value_counts().reindex(orden, fill_value=0)
+    conteos = df["escala_integrada"].value_counts().reindex(OBJETIVOS_ESCALA_ORDEN, fill_value=0)
     html = '<div style="overflow-x:auto"><table class="ev-table">'
     html += f"<thead><tr><th>{html_lib.escape(titulo)}</th><th style='text-align:right'>Colaboradores</th></tr></thead><tbody>"
     for etiqueta, conteo in conteos.items():
         html += (
             "<tr>"
-            f"<td style='font-weight:600;color:{colores[etiqueta]}'>{etiqueta}</td>"
+            f"<td style='font-weight:600;color:{OBJETIVOS_ESCALA_COLORES[etiqueta]}'>{etiqueta}</td>"
             f"<td style='text-align:right'>{int(conteo)}</td>"
             "</tr>"
         )
@@ -2646,7 +2618,7 @@ def render_resultado_integrado_tipo(
     with filtro_3:
         filtro_escala = st.multiselect(
             "Escala integrada",
-            ["Alto Desempeño", "Desempeño satisfactorio", "Bajo desempeño", "Desempeño insatisfactorio"],
+            OBJETIVOS_ESCALA_ORDEN,
             key=f"filtro_integrado_{key_base}_escala",
             placeholder="Todas las escalas",
         )
@@ -2681,7 +2653,7 @@ def render_resultado_integrado_tipo(
     with kpi_i3:
         st.markdown(f"""
         <div class="kpi-card">
-            <div class="kpi-label">Alto desempeño</div>
+            <div class="kpi-label">Alto desempeño o superior</div>
             <div class="kpi-value green">{alto}</div>
             <div class="kpi-sub">integrada >= 90</div>
         </div>""", unsafe_allow_html=True)
@@ -3013,9 +2985,9 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 FASES = [
-    ("fase1", "Fase I - Evaluaci\u00f3n 360"),
-    ("fase2", "Fase II - Potencial"),
-    ("fase3", "Fase III - Objetivos"),
+    ("fase1", "Evaluaci\u00f3n de Desempeño"),
+    ("fase2", "Evaluaci\u00f3n de Competencias"),
+    ("fase3", "Evaluaci\u00f3n de Objetivos"),
     ("res_int", "Resultado Integrado"),
     ("ninebox", "Ninebox"),
 ]
@@ -3112,7 +3084,7 @@ if fase_activa == "fase1":
             .rename(columns={"puntaje": "global"})
             .sort_values("global", ascending=False)
         )
-        df_global_f["escala_idx"] = df_global_f["global"].apply(motor_360._idx_escala)
+        df_global_f["escala_idx"] = df_global_f["global"].apply(get_escala)
         df_global_f["escala"] = df_global_f["escala_idx"].apply(lambda i: ESCALA_LABELS[i])
 
         df_comp_prom_f = (
@@ -3170,7 +3142,7 @@ if fase_activa == "fase1":
     with c4:
         st.markdown(f"""
         <div class="kpi-card">
-            <div class="kpi-label">Alto desempeño</div>
+            <div class="kpi-label">Alto desempeño o superior</div>
             <div class="kpi-value green">{n_alto}</div>
             <div class="kpi-sub">colaboradores >= 90</div>
         </div>""", unsafe_allow_html=True)
@@ -3825,7 +3797,7 @@ if fase_activa == "fase3":
         with filtro_obj_2:
             filtro_obj_escala = st.multiselect(
                 "Nivel de desempeño",
-                ["Alto Desempeño", "Desempeño satisfactorio", "Bajo desempeño", "Desempeño insatisfactorio"],
+                OBJETIVOS_ESCALA_ORDEN,
                 key="filtro_objetivos_escala",
                 placeholder="Todos los niveles",
             )
@@ -3873,10 +3845,10 @@ if fase_activa == "fase3":
         k1, k2, k3, k4 = st.columns(4)
         with k1:
             st.markdown(f"""
-            <div class="kpi-card">
+                <div class="kpi-card">
                 <div class="kpi-label">Promedio objetivos</div>
                 <div class="kpi-value gradient">{promedio_obj:.2f}</div>
-                <div class="kpi-sub">{escala_label(promedio_obj)}</div>
+                <div class="kpi-sub">{escala_objetivos_label(promedio_obj)}</div>
             </div>""", unsafe_allow_html=True)
         with k2:
             st.markdown(f"""
@@ -3913,7 +3885,7 @@ if fase_activa == "fase3":
                     key="obj_distribucion",
                 )
             with graf_b:
-                st.markdown("**Cargos con mejor cumplimiento**")
+                st.markdown("**Ranking**")
                 st.plotly_chart(
                     fig_objetivos_cargos(df_obj_cargos),
                     use_container_width=True,
@@ -4051,7 +4023,7 @@ if fase_activa == "res_int":
             with filtros_colab_3:
                 filtro_nivel_integrado = st.multiselect(
                     "Escala integrada",
-                    ["Alto Desempeño", "Desempeño satisfactorio", "Bajo desempeño", "Desempeño insatisfactorio"],
+                    OBJETIVOS_ESCALA_ORDEN,
                     key="filtro_integrado_detalle_nivel",
                     placeholder="Todas las escalas",
                 )
