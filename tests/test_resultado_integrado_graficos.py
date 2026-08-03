@@ -19,6 +19,12 @@ class ResultadoIntegradoGraficosTest(unittest.TestCase):
             self.contenido,
         )
         self.assertIn("decimales=2,", self.contenido)
+        self.assertIn("colorear_por_escala=True,", self.contenido)
+
+    def test_colorea_cada_barra_segun_su_escala(self):
+        self.assertIn("OBJETIVOS_ESCALA_COLORES.get(", self.contenido)
+        self.assertIn("escala_objetivos_label(puntaje)", self.contenido)
+        self.assertIn("marker_color=colores", self.contenido)
 
     def test_no_repite_la_primera_dimension_en_el_panel_izquierdo(self):
         inicio = self.contenido.index("with panel_izq:")
@@ -45,6 +51,14 @@ class ResultadoIntegradoGraficosTest(unittest.TestCase):
         self.assertIn('("evd_360", "Desempeño")', self.contenido)
         self.assertIn('("objetivos", "Objetivos")', self.contenido)
         self.assertIn('("potencial", "Competencias")', self.contenido)
+
+    def test_excluye_sin_dato_del_desglose_por_grupo(self):
+        self.assertIn('if principal_dim == "grupo":', self.contenido)
+        self.assertIn('grupos_validos.str.casefold().ne("sin dato")', self.contenido)
+        self.assertIn(
+            "df_principal = resumen_dimension_integrada(df_principal_base, principal_dim)",
+            self.contenido,
+        )
 
 
 if __name__ == "__main__":

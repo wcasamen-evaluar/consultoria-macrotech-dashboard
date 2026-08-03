@@ -2219,13 +2219,25 @@ def fig_objetivos_dimension(
     dimension: str,
     mostrar_bandas: bool = True,
     decimales: int = 0,
+    colorear_por_escala: bool = False,
 ) -> go.Figure:
     datos = df_dim.sort_values("puntaje", ascending=True)
+    colores = (
+        [
+            OBJETIVOS_ESCALA_COLORES.get(
+                escala_objetivos_label(puntaje),
+                "#1f3f77",
+            )
+            for puntaje in datos["puntaje"]
+        ]
+        if colorear_por_escala
+        else "#1f3f77"
+    )
     fig = go.Figure(go.Bar(
         y=datos[dimension],
         x=datos["puntaje"],
         orientation="h",
-        marker_color="#1f3f77",
+        marker_color=colores,
         text=[f"{v:.{decimales}f}" for v in datos["puntaje"]],
         textposition="outside",
         customdata=datos[["colaboradores", "participacion"]],
@@ -2695,7 +2707,21 @@ def render_resultado_integrado_tipo(
 
     dimensiones = dimension_disponible(df_tipo, ["grupo", "cargo_objetivo", "pais", "empresa", "gente_a_cargo"])
     principal_dim = dimensiones[0] if dimensiones else "gente_a_cargo"
-    df_principal = resumen_dimension_integrada(df_tipo, principal_dim)
+    df_principal_base = df_tipo.copy()
+    if principal_dim == "grupo":
+        grupos_validos = df_principal_base[principal_dim].astype("string").str.strip()
+        df_principal_base = df_principal_base[
+            grupos_validos.notna()
+            & grupos_validos.ne("")
+            & grupos_validos.str.casefold().ne("sin dato")
+        ]
+    df_principal = resumen_dimension_integrada(df_principal_base, principal_dim)
+    total_principal = len(df_principal_base)
+    promedio_principal = (
+        float(df_principal_base["integrada"].mean())
+        if total_principal
+        else 0.0
+    )
 
     panel_izq, panel_centro, panel_der = st.columns([0.9, 1.55, 1.1])
     with panel_izq:
@@ -2714,6 +2740,7 @@ def render_resultado_integrado_tipo(
                 principal_dim,
                 mostrar_bandas=False,
                 decimales=2,
+                colorear_por_escala=True,
             ),
             use_container_width=True,
             key=f"integrado_dimension_{key_base}",
@@ -2748,8 +2775,8 @@ def render_resultado_integrado_tipo(
             principal_dim.replace("_", " ").title(),
             df_principal,
             principal_dim,
-            total,
-            promedio,
+            total_principal,
+            promedio_principal,
             encabezado_promedio="Promedio",
             decimales=2,
         )
