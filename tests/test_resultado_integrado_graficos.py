@@ -15,9 +15,10 @@ class ResultadoIntegradoGraficosTest(unittest.TestCase):
 
     def test_resultado_por_grupo_no_muestra_bandas_de_fondo(self):
         self.assertIn(
-            "fig_objetivos_dimension(df_principal, principal_dim, mostrar_bandas=False)",
+            "mostrar_bandas=False,",
             self.contenido,
         )
+        self.assertIn("decimales=2,", self.contenido)
 
     def test_no_repite_la_primera_dimension_en_el_panel_izquierdo(self):
         inicio = self.contenido.index("with panel_izq:")
@@ -35,6 +36,8 @@ class ResultadoIntegradoGraficosTest(unittest.TestCase):
         posicion_grupo = panel_derecho.index("render_tabla_dimension_objetivos")
         self.assertLess(posicion_colaboradores, posicion_grupo)
         self.assertIn('encabezado_promedio="Promedio"', panel_derecho)
+        self.assertIn("decimales=2", panel_derecho)
+        self.assertIn("{valor:.2f}", panel_derecho)
         self.assertNotIn('dim == "cargo_objetivo"', panel_derecho)
 
     def test_usa_nombres_desempeno_objetivos_y_competencias(self):

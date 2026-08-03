@@ -2218,6 +2218,7 @@ def fig_objetivos_dimension(
     df_dim: pd.DataFrame,
     dimension: str,
     mostrar_bandas: bool = True,
+    decimales: int = 0,
 ) -> go.Figure:
     datos = df_dim.sort_values("puntaje", ascending=True)
     fig = go.Figure(go.Bar(
@@ -2225,7 +2226,7 @@ def fig_objetivos_dimension(
         x=datos["puntaje"],
         orientation="h",
         marker_color="#1f3f77",
-        text=[f"{v:.0f}" for v in datos["puntaje"]],
+        text=[f"{v:.{decimales}f}" for v in datos["puntaje"]],
         textposition="outside",
         customdata=datos[["colaboradores", "participacion"]],
         hovertemplate="%{y}<br>Promedio %{x:.2f}<br>%{customdata[0]} colaboradores<br>%{customdata[1]:.1%}<extra></extra>",
@@ -2354,6 +2355,7 @@ def render_tabla_dimension_objetivos(
     promedio: float,
     altura_max: int | None = None,
     encabezado_promedio: str = "Promedio de Objetivos",
+    decimales: int = 0,
 ) -> None:
     st.markdown(f"**{titulo}**")
     estilo = "overflow-x:auto"
@@ -2369,7 +2371,7 @@ def render_tabla_dimension_objetivos(
         html += (
             "<tr>"
             f"<td style='font-weight:600'>{etiqueta}</td>"
-            f"<td style='text-align:right;color:#185fa5;font-weight:700'>{fila['puntaje']:.0f}</td>"
+            f"<td style='text-align:right;color:#185fa5;font-weight:700'>{fila['puntaje']:.{decimales}f}</td>"
             f"<td style='text-align:right'>{int(fila['colaboradores'])}</td>"
             f"<td style='text-align:right'>{fila['participacion']:.0%}</td>"
             "</tr>"
@@ -2377,7 +2379,7 @@ def render_tabla_dimension_objetivos(
     html += (
         "<tr style='font-weight:700;background:#f8f7fc'>"
         "<td>Total general</td>"
-        f"<td style='text-align:right;color:#185fa5'>{promedio:.0f}</td>"
+        f"<td style='text-align:right;color:#185fa5'>{promedio:.{decimales}f}</td>"
         f"<td style='text-align:right'>{total_colab}</td>"
         "<td style='text-align:right'>100%</td>"
         "</tr></tbody></table></div>"
@@ -2707,7 +2709,12 @@ def render_resultado_integrado_tipo(
         )
         st.markdown(f"**Resultado por {principal_dim.replace('_', ' ')}**")
         st.plotly_chart(
-            fig_objetivos_dimension(df_principal, principal_dim, mostrar_bandas=False),
+            fig_objetivos_dimension(
+                df_principal,
+                principal_dim,
+                mostrar_bandas=False,
+                decimales=2,
+            ),
             use_container_width=True,
             key=f"integrado_dimension_{key_base}",
         )
@@ -2729,7 +2736,7 @@ def render_resultado_integrado_tipo(
             html += f"<td style='font-weight:600'>{html_lib.escape(str(fila['colaborador']))}</td>"
             for col, _ in config["detalle"]:
                 valor = fila.get(col)
-                html += f"<td style='text-align:right'>{valor:.0f}</td>" if pd.notna(valor) else "<td style='text-align:right'>-</td>"
+                html += f"<td style='text-align:right'>{valor:.2f}</td>" if pd.notna(valor) else "<td style='text-align:right'>-</td>"
             html += f"<td>{html_lib.escape(str(fila['escala_integrada']))}</td>"
             html += f"<td style='text-align:right'>{chip_html(fila['integrada'])}</td>"
             html += "</tr>"
@@ -2744,6 +2751,7 @@ def render_resultado_integrado_tipo(
             total,
             promedio,
             encabezado_promedio="Promedio",
+            decimales=2,
         )
 
 
