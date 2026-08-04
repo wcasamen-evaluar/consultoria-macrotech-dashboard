@@ -161,6 +161,48 @@ def normalizar_dataframe(df: pd.DataFrame, verbose: bool = True) -> pd.DataFrame
     return df
 
 
+def extraer_metadata_colaboradores(df: pd.DataFrame) -> pd.DataFrame:
+    """Extrae metadatos personales de Fase I con nombres de columna estables."""
+    columnas_salida = [
+        "colaborador", "email_colaborador", "empresa", "pais", "area"
+    ]
+    if df.empty or "nombre_colaborador" not in df.columns:
+        return pd.DataFrame(columns=columnas_salida)
+
+    alias = {
+        "email_colaborador": ("email_colaborador",),
+        "empresa": ("empresa",),
+        "pais": ("pais", "país"),
+        "area": ("area", "área"),
+    }
+    seleccion = pd.DataFrame({"colaborador": df["nombre_colaborador"]})
+    for destino, candidatas in alias.items():
+        origen = next((col for col in candidatas if col in df.columns), None)
+        seleccion[destino] = df[origen] if origen else pd.NA
+
+    seleccion = seleccion[seleccion["colaborador"].notna()].copy()
+    for columna in columnas_salida:
+        seleccion[columna] = seleccion[columna].apply(
+            lambda valor: valor.strip() if isinstance(valor, str) else valor
+        )
+
+    def primer_valor(valores: pd.Series):
+        validos = valores[
+            valores.notna()
+            & valores.astype(str).str.strip().ne("")
+            & ~valores.astype(str).str.strip().str.casefold().isin(
+                {"nan", "none", "n/a", "na", "-"}
+            )
+        ]
+        return validos.iloc[0] if len(validos) else pd.NA
+
+    return (
+        seleccion.groupby("colaborador", sort=False, as_index=False)
+        .agg({col: primer_valor for col in columnas_salida if col != "colaborador"})
+        .reindex(columns=columnas_salida)
+    )
+
+
 def leer_excel(ruta: str | Path, sheet_name: str | None = "Resultado consulta") -> pd.DataFrame:
     """
     Lee el Excel de evaluacion y devuelve DataFrame limpio.

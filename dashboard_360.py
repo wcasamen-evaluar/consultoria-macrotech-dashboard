@@ -36,7 +36,7 @@ ARCHIVO_BASE = next(
     Path(__file__).with_name("Fase_I_Evaluación_360__180__90__copia_.xlsx"),
 )
 VERSION_CARGA_BASE = 7
-VERSION_CARGA_DB = 5
+VERSION_CARGA_DB = 6
 
 # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 # CONFIGURACIÃ“N DEL PROYECTO â€” editar aquÃ­ si cambia el proyecto
@@ -1294,6 +1294,8 @@ def preparar_ninebox(df_360_global: pd.DataFrame, df_potencial: pd.DataFrame) ->
 def construir_indice_colaboradores(res_360: dict, res_potencial: dict, res_objetivos: dict) -> pd.DataFrame:
     registros: dict[str, dict] = {}
     alias_correo: dict[str, str] = {}
+    correos_con_potencial: set[str] = set()
+    nombres_con_potencial: set[str] = set()
 
     def upsert(correos: object, colaborador: object, **campos: object) -> None:
         if isinstance(correos, (list, tuple, set)):
@@ -1348,6 +1350,18 @@ def construir_indice_colaboradores(res_360: dict, res_potencial: dict, res_objet
     df_potencial = res_potencial.get("df_personas", pd.DataFrame())
     if not df_potencial.empty:
         for _, fila in df_potencial.iterrows():
+            correos_con_potencial.update(
+                correo
+                for correo in (
+                    normalizar_correo(fila.get("correo")),
+                    normalizar_correo(fila.get("correo_potencial")),
+                    normalizar_correo(fila.get("correo_instancia")),
+                )
+                if correo
+            )
+            nombre_potencial = normalizar_nombre_match(fila.get("colaborador"))
+            if nombre_potencial:
+                nombres_con_potencial.add(nombre_potencial)
             upsert(
                 [fila.get("correo"), fila.get("correo_potencial"), fila.get("correo_instancia")],
                 fila.get("colaborador"),
@@ -1371,10 +1385,29 @@ def construir_indice_colaboradores(res_360: dict, res_potencial: dict, res_objet
                 jefe=fila.get("jefe"),
             )
 
-    df_360 = res_360.get("df_fuente", pd.DataFrame())
-    if not df_360.empty and {"email_colaborador", "nombre_colaborador"}.issubset(df_360.columns):
-        for _, fila in df_360[["email_colaborador", "nombre_colaborador"]].drop_duplicates().iterrows():
-            upsert(fila.get("email_colaborador"), fila.get("nombre_colaborador"))
+    df_360 = res_360.get("df_global", pd.DataFrame())
+    if not df_360.empty and {"email_colaborador", "colaborador"}.issubset(df_360.columns):
+        for _, fila in df_360.drop_duplicates("colaborador").iterrows():
+            correo_360 = normalizar_correo(fila.get("email_colaborador"))
+            nombre_360 = normalizar_nombre_match(fila.get("colaborador"))
+            sin_registro_potencial = (
+                correo_360 not in correos_con_potencial
+                and nombre_360 not in nombres_con_potencial
+            )
+            metadata_fallback = (
+                {
+                    "empresa": fila.get("empresa"),
+                    "pais": fila.get("pais"),
+                    "area": fila.get("area"),
+                }
+                if sin_registro_potencial
+                else {}
+            )
+            upsert(
+                fila.get("email_colaborador"),
+                fila.get("colaborador"),
+                **metadata_fallback,
+            )
 
     for registro in registros.values():
         registro["correo_potencial_key"] = normalizar_correo(registro.get("correo_potencial"))
@@ -1590,14 +1623,13 @@ def calcular(df: pd.DataFrame, weights: dict) -> dict:
     res = motor_360.calcular_dashboard(df, weights)
     res["df_global"]["escala_idx"] = res["df_global"]["global"].apply(get_escala)
     res["df_global"]["escala"] = res["df_global"]["escala_idx"].apply(lambda i: ESCALA_LABELS[i])
-    if {"nombre_colaborador", "email_colaborador"}.issubset(df.columns):
-        correos_360 = (
-            df[["nombre_colaborador", "email_colaborador"]]
-            .dropna(subset=["nombre_colaborador"])
-            .drop_duplicates("nombre_colaborador")
-            .rename(columns={"nombre_colaborador": "colaborador"})
+    metadata_360 = motor_360.extraer_metadata_colaboradores(df)
+    if not metadata_360.empty:
+        res["df_global"] = res["df_global"].merge(
+            metadata_360,
+            on="colaborador",
+            how="left",
         )
-        res["df_global"] = res["df_global"].merge(correos_360, on="colaborador", how="left")
     return res
 
 
@@ -1612,7 +1644,18 @@ def resultado_360_vacio(df_fuente: pd.DataFrame) -> dict:
             "items": 0,
             "preguntas_abiertas_omitidas": 0,
         },
-        "df_global": pd.DataFrame(columns=["colaborador", "global", "escala_idx", "escala", "email_colaborador"]),
+        "df_global": pd.DataFrame(
+            columns=[
+                "colaborador",
+                "global",
+                "escala_idx",
+                "escala",
+                "email_colaborador",
+                "empresa",
+                "pais",
+                "area",
+            ]
+        ),
         "df_comp": pd.DataFrame(
             columns=["colaborador", "competencia", "puntaje"]
             + [f"tipo_{tipo}" for tipo in tipos_activos]
@@ -2427,10 +2470,18 @@ def preparar_resultado_integrado(
     df_obj_fuente: pd.DataFrame,
 ) -> pd.DataFrame:
     base_360_cols = ["colaborador", "global"] + [
-        col for col in ["email_colaborador", "correo"] if col in df_360_global.columns
+        col
+        for col in ["email_colaborador", "correo", "empresa", "pais", "area"]
+        if col in df_360_global.columns
     ]
     base_360 = df_360_global[base_360_cols].rename(
-        columns={"colaborador": "colaborador_360", "global": "evd_360"}
+        columns={
+            "colaborador": "colaborador_360",
+            "global": "evd_360",
+            "empresa": "empresa_360",
+            "pais": "pais_360",
+            "area": "area_360",
+        }
     ).copy()
     base_obj_cols = [col for col in ["colaborador", "email_colaborador", "puntaje", "cargo_objetivo", "jefe"] if col in df_obj_colab.columns]
     base_obj = df_obj_colab[base_obj_cols].rename(
@@ -2470,6 +2521,22 @@ def preparar_resultado_integrado(
     integrado["colaborador"] = integrado["colaborador_360"].combine_first(integrado["colaborador_obj"])
     integrado["colaborador"] = integrado["colaborador"].combine_first(integrado["colaborador_pot"])
     integrado = integrado.drop_duplicates("colaborador")
+
+    sin_registro_potencial = (
+        integrado["colaborador_pot"].isna()
+        if "colaborador_pot" in integrado.columns
+        else pd.Series(True, index=integrado.index)
+    )
+    for campo in ["empresa", "pais", "area"]:
+        campo_360 = f"{campo}_360"
+        if campo not in integrado.columns:
+            integrado[campo] = pd.NA
+        if campo_360 in integrado.columns:
+            integrado.loc[sin_registro_potencial, campo] = integrado.loc[
+                sin_registro_potencial, campo
+            ].combine_first(
+                integrado.loc[sin_registro_potencial, campo_360]
+            )
 
     evaluadores = set(df_obj_fuente["nombre_evaluador"].dropna().map(normalizar_nombre_match)) if not df_obj_fuente.empty else set()
     integrado["gente_a_cargo"] = integrado["colaborador"].map(
