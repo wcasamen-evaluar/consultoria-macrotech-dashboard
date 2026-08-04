@@ -1623,7 +1623,36 @@ def calcular(df: pd.DataFrame, weights: dict) -> dict:
     res = motor_360.calcular_dashboard(df, weights)
     res["df_global"]["escala_idx"] = res["df_global"]["global"].apply(get_escala)
     res["df_global"]["escala"] = res["df_global"]["escala_idx"].apply(lambda i: ESCALA_LABELS[i])
-    metadata_360 = motor_360.extraer_metadata_colaboradores(df)
+    extraer_metadata = getattr(
+        motor_360,
+        "extraer_metadata_colaboradores",
+        None,
+    )
+    if callable(extraer_metadata):
+        metadata_360 = extraer_metadata(df)
+    else:
+        # Compatibilidad con procesos de Streamlit que conservaron en memoria
+        # una version anterior de reporte.calculos durante el redespliegue.
+        columnas = {
+            "nombre_colaborador": "colaborador",
+            "email_colaborador": "email_colaborador",
+            "empresa": "empresa",
+            "pais": "pais",
+            "país": "pais",
+            "area": "area",
+            "área": "area",
+        }
+        disponibles = [columna for columna in columnas if columna in df.columns]
+        metadata_360 = df[disponibles].rename(columns=columnas).copy()
+        for columna in ["email_colaborador", "empresa", "pais", "area"]:
+            if columna not in metadata_360.columns:
+                metadata_360[columna] = pd.NA
+        metadata_360 = (
+            metadata_360[
+                ["colaborador", "email_colaborador", "empresa", "pais", "area"]
+            ]
+            .drop_duplicates(subset=["colaborador"], keep="first")
+        )
     if not metadata_360.empty:
         res["df_global"] = res["df_global"].merge(
             metadata_360,

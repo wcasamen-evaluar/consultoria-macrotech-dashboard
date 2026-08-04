@@ -35,6 +35,14 @@ class MetadataDesempenoFallbackTest(unittest.TestCase):
         self.assertIn("if sin_registro_potencial", contenido)
         self.assertIn('for campo in ["empresa", "pais", "area"]:', contenido)
 
+    def test_dashboard_tolera_un_modulo_calculos_aun_no_recargado(self):
+        ruta = Path(__file__).resolve().parents[1] / "dashboard_360.py"
+        contenido = ruta.read_text(encoding="utf-8-sig")
+
+        self.assertIn('getattr(\n        motor_360,', contenido)
+        self.assertIn('"extraer_metadata_colaboradores",', contenido)
+        self.assertIn("if callable(extraer_metadata):", contenido)
+
 
 if __name__ == "__main__":
     unittest.main()
