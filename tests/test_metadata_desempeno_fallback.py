@@ -7,7 +7,7 @@ from reporte import calculos
 
 
 class MetadataDesempenoFallbackTest(unittest.TestCase):
-    def test_normaliza_empresa_pais_y_area_desde_resultado_consulta(self):
+    def test_normaliza_metadata_desde_resultado_consulta(self):
         fuente = pd.DataFrame(
             {
                 "nombre_colaborador": ["Persona", "Persona"],
@@ -15,6 +15,7 @@ class MetadataDesempenoFallbackTest(unittest.TestCase):
                 "empresa": ["Empresa A"] * 2,
                 "país": ["República Dominicana"] * 2,
                 "área": ["Tecnología"] * 2,
+                "grupo": ["ESPECIALISTAS"] * 2,
             }
         )
 
@@ -25,6 +26,7 @@ class MetadataDesempenoFallbackTest(unittest.TestCase):
         self.assertEqual(resultado.loc[0, "empresa"], "Empresa A")
         self.assertEqual(resultado.loc[0, "pais"], "República Dominicana")
         self.assertEqual(resultado.loc[0, "area"], "Tecnología")
+        self.assertEqual(resultado.loc[0, "grupo"], "ESPECIALISTAS")
 
     def test_dashboard_limita_el_fallback_a_quienes_no_existen_en_potencial(self):
         ruta = Path(__file__).resolve().parents[1] / "dashboard_360.py"
@@ -33,7 +35,11 @@ class MetadataDesempenoFallbackTest(unittest.TestCase):
         self.assertIn("sin_registro_potencial = (", contenido)
         self.assertIn("metadata_fallback = (", contenido)
         self.assertIn("if sin_registro_potencial", contenido)
-        self.assertIn('for campo in ["empresa", "pais", "area"]:', contenido)
+        self.assertIn(
+            'for campo in ["empresa", "pais", "area", "grupo"]:',
+            contenido,
+        )
+        self.assertIn('"grupo": fila.get("grupo"),', contenido)
 
     def test_dashboard_tolera_un_modulo_calculos_aun_no_recargado(self):
         ruta = Path(__file__).resolve().parents[1] / "dashboard_360.py"

@@ -164,7 +164,7 @@ def normalizar_dataframe(df: pd.DataFrame, verbose: bool = True) -> pd.DataFrame
 def extraer_metadata_colaboradores(df: pd.DataFrame) -> pd.DataFrame:
     """Extrae metadatos personales de Fase I con nombres de columna estables."""
     columnas_salida = [
-        "colaborador", "email_colaborador", "empresa", "pais", "area"
+        "colaborador", "email_colaborador", "empresa", "pais", "area", "grupo"
     ]
     if df.empty or "nombre_colaborador" not in df.columns:
         return pd.DataFrame(columns=columnas_salida)
@@ -174,6 +174,7 @@ def extraer_metadata_colaboradores(df: pd.DataFrame) -> pd.DataFrame:
         "empresa": ("empresa",),
         "pais": ("pais", "país"),
         "area": ("area", "área"),
+        "grupo": ("grupo",),
     }
     seleccion = pd.DataFrame({"colaborador": df["nombre_colaborador"]})
     for destino, candidatas in alias.items():

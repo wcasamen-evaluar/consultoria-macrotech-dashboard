@@ -36,7 +36,7 @@ ARCHIVO_BASE = next(
     Path(__file__).with_name("Fase_I_Evaluación_360__180__90__copia_.xlsx"),
 )
 VERSION_CARGA_BASE = 7
-VERSION_CARGA_DB = 6
+VERSION_CARGA_DB = 7
 
 # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 # CONFIGURACIÃ“N DEL PROYECTO â€” editar aquÃ­ si cambia el proyecto
@@ -1399,6 +1399,7 @@ def construir_indice_colaboradores(res_360: dict, res_potencial: dict, res_objet
                     "empresa": fila.get("empresa"),
                     "pais": fila.get("pais"),
                     "area": fila.get("area"),
+                    "grupo": fila.get("grupo"),
                 }
                 if sin_registro_potencial
                 else {}
@@ -1641,15 +1642,23 @@ def calcular(df: pd.DataFrame, weights: dict) -> dict:
             "país": "pais",
             "area": "area",
             "área": "area",
+            "grupo": "grupo",
         }
         disponibles = [columna for columna in columnas if columna in df.columns]
         metadata_360 = df[disponibles].rename(columns=columnas).copy()
-        for columna in ["email_colaborador", "empresa", "pais", "area"]:
+        for columna in ["email_colaborador", "empresa", "pais", "area", "grupo"]:
             if columna not in metadata_360.columns:
                 metadata_360[columna] = pd.NA
         metadata_360 = (
             metadata_360[
-                ["colaborador", "email_colaborador", "empresa", "pais", "area"]
+                [
+                    "colaborador",
+                    "email_colaborador",
+                    "empresa",
+                    "pais",
+                    "area",
+                    "grupo",
+                ]
             ]
             .drop_duplicates(subset=["colaborador"], keep="first")
         )
@@ -1683,6 +1692,7 @@ def resultado_360_vacio(df_fuente: pd.DataFrame) -> dict:
                 "empresa",
                 "pais",
                 "area",
+                "grupo",
             ]
         ),
         "df_comp": pd.DataFrame(
@@ -2500,7 +2510,9 @@ def preparar_resultado_integrado(
 ) -> pd.DataFrame:
     base_360_cols = ["colaborador", "global"] + [
         col
-        for col in ["email_colaborador", "correo", "empresa", "pais", "area"]
+        for col in [
+            "email_colaborador", "correo", "empresa", "pais", "area", "grupo"
+        ]
         if col in df_360_global.columns
     ]
     base_360 = df_360_global[base_360_cols].rename(
@@ -2510,6 +2522,7 @@ def preparar_resultado_integrado(
             "empresa": "empresa_360",
             "pais": "pais_360",
             "area": "area_360",
+            "grupo": "grupo_360",
         }
     ).copy()
     base_obj_cols = [col for col in ["colaborador", "email_colaborador", "puntaje", "cargo_objetivo", "jefe"] if col in df_obj_colab.columns]
@@ -2556,7 +2569,7 @@ def preparar_resultado_integrado(
         if "colaborador_pot" in integrado.columns
         else pd.Series(True, index=integrado.index)
     )
-    for campo in ["empresa", "pais", "area"]:
+    for campo in ["empresa", "pais", "area", "grupo"]:
         campo_360 = f"{campo}_360"
         if campo not in integrado.columns:
             integrado[campo] = pd.NA
