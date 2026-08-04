@@ -42,6 +42,14 @@ class NineboxLabelsTest(unittest.TestCase):
         self.assertIn('st.markdown("**Ranking**")', contenido)
         self.assertNotIn("Cargos con mejor cumplimiento", contenido)
 
+    def test_los_ejes_ninebox_usan_competencias_y_desempeno(self):
+        ruta = Path(__file__).resolve().parents[1] / "dashboard_360.py"
+        contenido = ruta.read_text(encoding="utf-8-sig")
+        self.assertIn('title=dict(text="Competencias"', contenido)
+        self.assertIn('title=dict(text="Desempeño"', contenido)
+        self.assertNotIn('title=dict(text="Potencial"', contenido)
+        self.assertNotIn('title=dict(text="Desempeño 360"', contenido)
+
     def test_los_colores_coinciden_con_la_matriz_de_referencia(self):
         esperados = {
             1: "#4EA72F",

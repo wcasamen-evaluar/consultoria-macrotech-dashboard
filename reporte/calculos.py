@@ -9,6 +9,8 @@ Lo usan:
 """
 
 from pathlib import Path
+import re
+import unicodedata
 
 import pandas as pd
 
@@ -74,6 +76,17 @@ COLUMNAS_EXPORTACION_EVALUAR = [
 ]
 ESCALA_DASHBOARD = [etiqueta for _, _, etiqueta, _ in BANDAS]
 
+EXCLUIDOS_DESEMPENO = {
+    "malvarado@macrotech.com.do": "Marcos Alvarado Aponte",
+    "jmartinez@cimer.com.do": "Joel Martínez Croussett",
+    "ananlli494@gmail.com": "Ananlli Mora Peguero",
+    "asanchezmf123@gmail.com": "Andres Confesor Sánchez Montero",
+    "jeovannyjmm01@gmail.com": "Jeovanny De Jesus Molina Martínez",
+    "matoswaskar40@gmail.com": "Waskar Emilio Matos Pérez",
+    "kcoronado@cai.com.do": "Karen Libell Coronado Paulino",
+    "jvasquez@cesante.com": "Juan Vásquez",
+}
+
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -89,9 +102,33 @@ def clasificar(puntaje: float) -> dict:
 
 def limpiar_nombre_competencia(nombre: str) -> str:
     """Elimina prefijos numericos como '2.1 ' del nombre de competencia."""
-    import re
-
     return re.sub(r"^\d+(\.\d+)?\s+", "", str(nombre).strip())
+
+
+def _clave_nombre_persona(valor: object) -> str:
+    texto = unicodedata.normalize("NFKD", str(valor))
+    texto = "".join(char for char in texto if not unicodedata.combining(char))
+    return re.sub(r"[^a-z0-9]+", " ", texto.casefold()).strip()
+
+
+def filtrar_excluidos_desempeno(df: pd.DataFrame) -> pd.DataFrame:
+    """Retira del cálculo 360 a las personas excluidas por regla de negocio."""
+    if df.empty:
+        return df.copy()
+
+    mascara = pd.Series(False, index=df.index)
+    if "email_colaborador" in df.columns:
+        correos = df["email_colaborador"].fillna("").astype(str).str.strip().str.casefold()
+        mascara = mascara | correos.isin(EXCLUIDOS_DESEMPENO)
+    if "nombre_colaborador" in df.columns:
+        nombres_excluidos = {
+            _clave_nombre_persona(nombre)
+            for nombre in EXCLUIDOS_DESEMPENO.values()
+        }
+        mascara = mascara | df["nombre_colaborador"].map(
+            _clave_nombre_persona
+        ).isin(nombres_excluidos)
+    return df.loc[~mascara].copy()
 
 
 def calcular_pesos_redistribuidos(tipos_presentes: list, weights: dict | None = None) -> dict:
@@ -437,6 +474,7 @@ def calcular_todos(df: pd.DataFrame) -> dict:
     Retorna dict: {nombre_colaborador: resultado}.
     """
     df = normalizar_dataframe(df, verbose=False) if "puntaje" not in df.columns else df.copy()
+    df = filtrar_excluidos_desempeno(df)
     resultados = {}
     for nombre, grupo in df.groupby("nombre_colaborador"):
         print(f"  -> Calculando: {nombre}")
@@ -451,6 +489,7 @@ def calcular_todos(df: pd.DataFrame) -> dict:
 def calcular_items(df: pd.DataFrame, weights: dict | None = None) -> pd.DataFrame:
     """Calcula el puntaje ponderado por ítem para el conjunto de filas recibido."""
     df = normalizar_dataframe(df, verbose=False) if "puntaje" not in df.columns else df.copy()
+    df = filtrar_excluidos_desempeno(df)
     weights = weights or PESOS_BASE
     tipos_activos = {tipo: peso for tipo, peso in weights.items() if peso > 0}
 
@@ -484,6 +523,7 @@ def calcular_dashboard(df: pd.DataFrame, weights: dict | None = None) -> dict:
     Calcula los indicadores agregados usados por dashboard_360.py.
     """
     df = normalizar_dataframe(df, verbose=False) if "puntaje" not in df.columns else df.copy()
+    df = filtrar_excluidos_desempeno(df)
     weights = weights or PESOS_BASE
     tipos_activos = {t: w for t, w in weights.items() if w > 0}
 

@@ -35,8 +35,19 @@ ARCHIVO_BASE = next(
     Path(__file__).parent.glob("Fase_I_Evaluaci*n_360__180__90__copia_.xlsx"),
     Path(__file__).with_name("Fase_I_Evaluación_360__180__90__copia_.xlsx"),
 )
-VERSION_CARGA_BASE = 7
-VERSION_CARGA_DB = 7
+VERSION_CARGA_BASE = 8
+VERSION_CARGA_DB = 8
+
+EXCLUIDOS_DESEMPENO_EMAILS = {
+    "malvarado@macrotech.com.do",
+    "jmartinez@cimer.com.do",
+    "ananlli494@gmail.com",
+    "asanchezmf123@gmail.com",
+    "jeovannyjmm01@gmail.com",
+    "matoswaskar40@gmail.com",
+    "kcoronado@cai.com.do",
+    "jvasquez@cesante.com",
+}
 
 # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 # CONFIGURACIÃ“N DEL PROYECTO â€” editar aquÃ­ si cambia el proyecto
@@ -1297,7 +1308,12 @@ def construir_indice_colaboradores(res_360: dict, res_potencial: dict, res_objet
     correos_con_potencial: set[str] = set()
     nombres_con_potencial: set[str] = set()
 
-    def upsert(correos: object, colaborador: object, **campos: object) -> None:
+    def upsert(
+        correos: object,
+        colaborador: object,
+        permitir_crear: bool = True,
+        **campos: object,
+    ) -> None:
         if isinstance(correos, (list, tuple, set)):
             correos_lista = list(correos)
         else:
@@ -1310,6 +1326,17 @@ def construir_indice_colaboradores(res_360: dict, res_potencial: dict, res_objet
             return
 
         key = next((alias_correo[correo] for correo in correo_keys if correo in alias_correo), None)
+        if key is None and nombre_key:
+            key = next(
+                (
+                    registro_key
+                    for registro_key, registro in registros.items()
+                    if registro.get("colaborador_key") == nombre_key
+                ),
+                None,
+            )
+        if key is None and not permitir_crear:
+            return
         if key is None:
             key = f"correo::{correo_keys[0]}" if correo_keys else f"nombre::{nombre_key}"
 
@@ -1408,6 +1435,31 @@ def construir_indice_colaboradores(res_360: dict, res_potencial: dict, res_objet
                 fila.get("email_colaborador"),
                 fila.get("colaborador"),
                 **metadata_fallback,
+            )
+
+    df_metadata = res_360.get("df_metadata", pd.DataFrame())
+    if not df_metadata.empty:
+        for _, fila in df_metadata.drop_duplicates("colaborador").iterrows():
+            correo_360 = normalizar_correo(fila.get("email_colaborador"))
+            nombre_360 = normalizar_nombre_match(fila.get("colaborador"))
+            sin_registro_potencial = (
+                correo_360 not in correos_con_potencial
+                and nombre_360 not in nombres_con_potencial
+            )
+            upsert(
+                fila.get("email_colaborador"),
+                fila.get("colaborador"),
+                permitir_crear=False,
+                **(
+                    {
+                        "empresa": fila.get("empresa"),
+                        "pais": fila.get("pais"),
+                        "area": fila.get("area"),
+                        "grupo": fila.get("grupo"),
+                    }
+                    if sin_registro_potencial
+                    else {}
+                ),
             )
 
     for registro in registros.values():
@@ -1600,7 +1652,7 @@ def fig_ninebox(df_clasificado: pd.DataFrame) -> go.Figure:
             "plot_bgcolor": "#ffffff",
         },
         xaxis=dict(
-            title=dict(text="Desempeño 360", font=dict(size=13)),
+            title=dict(text="Desempeño", font=dict(size=13)),
             side="bottom",
             tickfont=dict(size=11),
             showgrid=False,
@@ -1608,7 +1660,7 @@ def fig_ninebox(df_clasificado: pd.DataFrame) -> go.Figure:
             fixedrange=True,
         ),
         yaxis=dict(
-            title=dict(text="Potencial", font=dict(size=13)),
+            title=dict(text="Competencias", font=dict(size=13)),
             tickfont=dict(size=11),
             autorange="reversed",
             showgrid=False,
@@ -1621,7 +1673,27 @@ def fig_ninebox(df_clasificado: pd.DataFrame) -> go.Figure:
 
 def calcular(df: pd.DataFrame, weights: dict) -> dict:
     """Calcula el dashboard usando el motor compartido del proyecto."""
-    res = motor_360.calcular_dashboard(df, weights)
+    filtrar_excluidos = getattr(
+        motor_360,
+        "filtrar_excluidos_desempeno",
+        None,
+    )
+    if callable(filtrar_excluidos):
+        df_calculo = filtrar_excluidos(df)
+    else:
+        df_calculo = df.copy()
+        if "email_colaborador" in df_calculo.columns:
+            correos = (
+                df_calculo["email_colaborador"]
+                .fillna("")
+                .astype(str)
+                .str.strip()
+                .str.casefold()
+            )
+            df_calculo = df_calculo[
+                ~correos.isin(EXCLUIDOS_DESEMPENO_EMAILS)
+            ].copy()
+    res = motor_360.calcular_dashboard(df_calculo, weights)
     res["df_global"]["escala_idx"] = res["df_global"]["global"].apply(get_escala)
     res["df_global"]["escala"] = res["df_global"]["escala_idx"].apply(lambda i: ESCALA_LABELS[i])
     extraer_metadata = getattr(
@@ -1668,6 +1740,7 @@ def calcular(df: pd.DataFrame, weights: dict) -> dict:
             on="colaborador",
             how="left",
         )
+    res["df_metadata"] = metadata_360
     return res
 
 
@@ -2507,15 +2580,43 @@ def preparar_resultado_integrado(
     df_obj_colab: pd.DataFrame,
     df_potencial: pd.DataFrame,
     df_obj_fuente: pd.DataFrame,
+    df_360_metadata: pd.DataFrame | None = None,
 ) -> pd.DataFrame:
+    df_360_para_integrar = df_360_global.copy()
+    if df_360_metadata is not None and not df_360_metadata.empty:
+        correos_con_puntaje = set(
+            df_360_para_integrar.get(
+                "email_colaborador", pd.Series(dtype=object)
+            ).map(normalizar_correo)
+        )
+        nombres_con_puntaje = set(
+            df_360_para_integrar.get(
+                "colaborador", pd.Series(dtype=object)
+            ).map(normalizar_nombre_match)
+        )
+        metadata_adicional = df_360_metadata[
+            ~df_360_metadata["email_colaborador"].map(normalizar_correo).isin(
+                correos_con_puntaje
+            )
+            & ~df_360_metadata["colaborador"].map(normalizar_nombre_match).isin(
+                nombres_con_puntaje
+            )
+        ].copy()
+        if not metadata_adicional.empty:
+            metadata_adicional["global"] = np.nan
+            df_360_para_integrar = pd.concat(
+                [df_360_para_integrar, metadata_adicional],
+                ignore_index=True,
+                sort=False,
+            )
     base_360_cols = ["colaborador", "global"] + [
         col
         for col in [
             "email_colaborador", "correo", "empresa", "pais", "area", "grupo"
         ]
-        if col in df_360_global.columns
+        if col in df_360_para_integrar.columns
     ]
-    base_360 = df_360_global[base_360_cols].rename(
+    base_360 = df_360_para_integrar[base_360_cols].rename(
         columns={
             "colaborador": "colaborador_360",
             "global": "evd_360",
@@ -4208,6 +4309,7 @@ if fase_activa == "res_int":
         res_objetivos["df_colaboradores"],
         res_potencial["df_personas"],
         res_objetivos["df_fuente"],
+        res.get("df_metadata"),
     )
 
     sub_ri_completa, sub_ri_360_obj, sub_ri_360_pot, sub_ri_obj_pot, sub_ri_colab = st.tabs([

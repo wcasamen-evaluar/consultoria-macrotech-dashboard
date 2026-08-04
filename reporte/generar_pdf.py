@@ -2805,6 +2805,11 @@ def generar_pdf(nombre, resultado, proceso, cliente, fecha,
     elif not hay_potencial and not hay_360 and hay_objetivos:
         primera_badge = "Evaluación de Objetivos"
     story = _primera_hoja_intro(nombre, cargo_intro, empresa_intro, jefe_intro, ancho_cont, badge=primera_badge)
+    if not hay_potencial:
+        story += [
+            _tabla_ficha_integral(ficha_intro, ancho_cont, estilos),
+            spacer(0.28),
+        ]
     primera_seccion = True
     contenido_agregado = False
 

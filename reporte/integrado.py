@@ -86,12 +86,6 @@ def normalizar_email_match(email: object) -> str:
     return str(email).strip().casefold()
 
 
-def _primer_email_serie(series: pd.Series) -> str:
-    valores = [normalizar_email_match(v) for v in series.dropna()]
-    valores = [v for v in valores if v]
-    return valores[0] if valores else ""
-
-
 def _match_key_from_row(row: pd.Series) -> str:
     for col in ["match_email", "match_email_potencial", "match_email_instancia"]:
         valor = row.get(col)
@@ -109,10 +103,57 @@ def preparar_resultado_integrado(
     df_obj_colab: pd.DataFrame,
     df_potencial: pd.DataFrame,
     df_obj_fuente: pd.DataFrame,
+    df_360_metadata: pd.DataFrame | None = None,
 ) -> pd.DataFrame:
-    cols_360 = [col for col in ["colaborador", "global", "email_colaborador"] if col in df_360_global.columns]
-    base_360 = df_360_global[cols_360].rename(
-        columns={"colaborador": "colaborador_360", "global": "evd_360"}
+    df_360_para_integrar = df_360_global.copy()
+    if df_360_metadata is not None and not df_360_metadata.empty:
+        correos_con_puntaje = set(
+            df_360_para_integrar.get(
+                "email_colaborador", pd.Series(dtype=object)
+            ).map(normalizar_email_match)
+        )
+        nombres_con_puntaje = set(
+            df_360_para_integrar.get(
+                "colaborador", pd.Series(dtype=object)
+            ).map(normalizar_nombre_match)
+        )
+        metadata_adicional = df_360_metadata[
+            ~df_360_metadata["email_colaborador"].map(
+                normalizar_email_match
+            ).isin(correos_con_puntaje)
+            & ~df_360_metadata["colaborador"].map(
+                normalizar_nombre_match
+            ).isin(nombres_con_puntaje)
+        ].copy()
+        if not metadata_adicional.empty:
+            metadata_adicional["global"] = np.nan
+            df_360_para_integrar = pd.concat(
+                [df_360_para_integrar, metadata_adicional],
+                ignore_index=True,
+                sort=False,
+            )
+    cols_360 = [
+        col
+        for col in [
+            "colaborador",
+            "global",
+            "email_colaborador",
+            "empresa",
+            "pais",
+            "area",
+            "grupo",
+        ]
+        if col in df_360_para_integrar.columns
+    ]
+    base_360 = df_360_para_integrar[cols_360].rename(
+        columns={
+            "colaborador": "colaborador_360",
+            "global": "evd_360",
+            "empresa": "empresa_360",
+            "pais": "pais_360",
+            "area": "area_360",
+            "grupo": "grupo_360",
+        }
     ).copy()
     cols_obj = [col for col in ["colaborador", "email_colaborador", "puntaje", "cargo_objetivo", "jefe"] if col in df_obj_colab.columns]
     base_obj = df_obj_colab[cols_obj].rename(
@@ -196,6 +237,18 @@ def preparar_resultado_integrado(
     ).combine_first(integrado.get("match_nombre", pd.Series(dtype=object)))
     integrado["colaborador"] = integrado["colaborador_360"].combine_first(integrado["colaborador_obj"])
     integrado["colaborador"] = integrado["colaborador"].combine_first(integrado["colaborador_pot"])
+
+    sin_registro_potencial = integrado["colaborador_pot"].isna()
+    for campo in ["empresa", "pais", "area", "grupo"]:
+        campo_360 = f"{campo}_360"
+        if campo not in integrado.columns:
+            integrado[campo] = pd.NA
+        if campo_360 in integrado.columns:
+            integrado.loc[sin_registro_potencial, campo] = integrado.loc[
+                sin_registro_potencial, campo
+            ].combine_first(
+                integrado.loc[sin_registro_potencial, campo_360]
+            )
 
     evaluadores = (
         set(df_obj_fuente["nombre_evaluador"].dropna().map(normalizar_nombre_match))
@@ -351,6 +404,46 @@ def _dato_real(*valores: Any, default: str = "") -> Any:
     return default
 
 
+def _resultado_360_vacio() -> dict[str, Any]:
+    """Estructura compatible con el PDF cuando no existe evaluacion 360."""
+    return {
+        "puntaje_global": None,
+        "clasificacion": {"etiqueta": "", "color": ""},
+        "competencias": {},
+        "desglose_global": {},
+        "pesos_aplicados": {},
+        "tipos_presentes": [],
+        "n_items": 0,
+    }
+
+
+def _emails_de_registro(registro: dict[str, Any]) -> set[str]:
+    """Recupera correos originales de una fila integrada, sin usar claves match."""
+    emails = set()
+    for columna, valor in registro.items():
+        clave = str(columna).casefold()
+        if clave.startswith("match_") or clave in {"canonical_key", "pot_match_key"}:
+            continue
+        if "email" not in clave and "correo" not in clave:
+            continue
+        email = normalizar_email_match(valor)
+        if email:
+            emails.add(email)
+    return emails
+
+
+def _tiene_otra_evaluacion(registro: dict[str, Any]) -> bool:
+    """Indica si la persona conserva Competencias/Potencial u Objetivos."""
+    for campo in ("potencial", "objetivos"):
+        try:
+            valor = float(registro.get(campo))
+        except (TypeError, ValueError):
+            continue
+        if np.isfinite(valor):
+            return True
+    return False
+
+
 def _competencias_potencial_colaborador(df_comp: pd.DataFrame, match: str) -> list[dict[str, Any]]:
     if df_comp.empty:
         return []
@@ -402,6 +495,24 @@ def _calcular_cap(competencias: list[dict[str, Any]]) -> dict[str, Any]:
         "percent": round(score * 100, 1),
         "competencias": len(valores),
     }
+
+
+def _cap_con_puntaje_oficial(
+    cap: dict[str, Any],
+    potencial: dict[str, Any],
+) -> dict[str, Any]:
+    """Alinea el CAP del informe con el puntaje oficial del dashboard."""
+    resultado = dict(cap)
+    try:
+        puntaje = float(potencial.get("evaluacion_potencial"))
+    except (AttributeError, TypeError, ValueError):
+        return resultado
+    if not np.isfinite(puntaje):
+        return resultado
+    puntaje = max(0.0, min(100.0, puntaje))
+    resultado["score"] = round(puntaje / 100, 6)
+    resultado["percent"] = puntaje
+    return resultado
 
 
 def _items_360_colaborador(
@@ -496,22 +607,28 @@ def _objetivos_detalle_por_llaves(df_objetivos: pd.DataFrame, match: str, emails
 def cargar_base_reportes(ruta_excel: str | Path | None = None) -> dict[str, Any]:
     ruta = resolver_excel_dashboard(ruta_excel)
     df_360 = motor_360.leer_exportacion_dashboard(ruta)
-    res_360 = motor_360.calcular_dashboard(df_360, motor_360.PESOS_BASE)
-    emails_360 = (
-        df_360.groupby("nombre_colaborador", dropna=False)["email_colaborador"]
-        .agg(_primer_email_serie)
-        .reset_index()
-        .rename(columns={"nombre_colaborador": "colaborador"})
+    df_360_calculo = motor_360.filtrar_excluidos_desempeno(df_360)
+    res_360 = motor_360.calcular_dashboard(
+        df_360_calculo,
+        motor_360.PESOS_BASE,
     )
-    res_360["df_global"] = res_360["df_global"].merge(emails_360, on="colaborador", how="left")
+    metadata_360 = motor_360.extraer_metadata_colaboradores(df_360)
+    res_360["df_global"] = res_360["df_global"].merge(
+        metadata_360,
+        on="colaborador",
+        how="left",
+    )
     res_360["df_global"]["escala"] = res_360["df_global"]["escala_idx"].apply(
         lambda i: motor_360.ESCALA_DASHBOARD[i]
     )
     resultados_360 = {
         nombre: motor_360.calcular_colaborador(grupo)
-        for nombre, grupo in df_360.groupby("nombre_colaborador")
+        for nombre, grupo in df_360_calculo.groupby("nombre_colaborador")
     }
-    grupos_360 = {nombre: grupo.copy() for nombre, grupo in df_360.groupby("nombre_colaborador")}
+    grupos_360 = {
+        nombre: grupo.copy()
+        for nombre, grupo in df_360_calculo.groupby("nombre_colaborador")
+    }
     promedio_competencias_360 = {
         normalizar_nombre_match(row["competencia"]): float(row["prom_comp"])
         for _, row in res_360["df_comp_prom"].iterrows()
@@ -523,6 +640,7 @@ def cargar_base_reportes(ruta_excel: str | Path | None = None) -> dict[str, Any]
         res_objetivos["df_colaboradores"],
         res_potencial["df_personas"],
         res_objetivos["df_fuente"],
+        metadata_360,
     )
     df_ninebox = clasificar_ninebox(preparar_ninebox(res_360["df_global"], res_potencial["df_personas"]))
 
@@ -544,15 +662,50 @@ def cargar_base_reportes(ruta_excel: str | Path | None = None) -> dict[str, Any]
     if not res_objetivos["df_colaboradores"].empty and "email_colaborador" in res_objetivos["df_colaboradores"].columns:
         res_objetivos["df_colaboradores"]["match_email"] = res_objetivos["df_colaboradores"]["email_colaborador"].map(normalizar_email_match)
 
+    candidatos_reporte = [
+        (nombre, resultado_360, grupos_360.get(nombre, pd.DataFrame()), None)
+        for nombre, resultado_360 in resultados_360.items()
+    ]
+    nombres_candidatos = {
+        normalizar_nombre_match(nombre)
+        for nombre in resultados_360
+    }
+    for email_excluido, nombre_excluido in motor_360.EXCLUIDOS_DESEMPENO.items():
+        integrado_excluido = _registro_por_llaves(
+            df_integrado,
+            normalizar_nombre_match(nombre_excluido),
+            {normalizar_email_match(email_excluido)},
+        )
+        if not integrado_excluido or not _tiene_otra_evaluacion(integrado_excluido):
+            continue
+        nombre_reporte = str(
+            integrado_excluido.get("colaborador") or nombre_excluido
+        ).strip()
+        if normalizar_nombre_match(nombre_reporte) in nombres_candidatos:
+            continue
+        candidatos_reporte.append(
+            (
+                nombre_reporte,
+                _resultado_360_vacio(),
+                pd.DataFrame(),
+                integrado_excluido,
+            )
+        )
+        nombres_candidatos.add(normalizar_nombre_match(nombre_reporte))
+
     reportes = {}
-    for nombre, resultado_360 in resultados_360.items():
+    for nombre, resultado_360, grupo_360, integrado_precalculado in candidatos_reporte:
         match = normalizar_nombre_match(nombre)
         emails = {
             normalizar_email_match(valor)
-            for valor in grupos_360.get(nombre, pd.DataFrame()).get("email_colaborador", pd.Series(dtype=object)).dropna().unique()
+            for valor in grupo_360.get("email_colaborador", pd.Series(dtype=object)).dropna().unique()
             if normalizar_email_match(valor)
         }
-        integrado = _registro_por_llaves(df_integrado, match, emails)
+        if integrado_precalculado:
+            emails.update(_emails_de_registro(integrado_precalculado))
+        integrado = integrado_precalculado or _registro_por_llaves(
+            df_integrado, match, emails
+        )
         potencial = _registro_por_llaves(res_potencial["df_personas"], match, emails)
         objetivos = _registro_por_llaves(res_objetivos["df_colaboradores"], match, emails)
         ninebox = _registro_por_match(df_ninebox, match)
@@ -568,6 +721,10 @@ def cargar_base_reportes(ruta_excel: str | Path | None = None) -> dict[str, Any]
         competencias_potencial = _competencias_potencial_por_llaves(
             res_potencial["df_competencias"], match, emails
         )
+        cap = _cap_con_puntaje_oficial(
+            _calcular_cap(competencias_potencial),
+            potencial,
+        )
         reportes[nombre] = {
             "resultado_360": resultado_360,
             "ficha": ficha,
@@ -576,10 +733,10 @@ def cargar_base_reportes(ruta_excel: str | Path | None = None) -> dict[str, Any]
             "objetivos": objetivos,
             "objetivos_detalle": _objetivos_detalle_por_llaves(res_objetivos["df_fuente"], match, emails),
             "ninebox": ninebox,
-            "cap": _calcular_cap(competencias_potencial),
+            "cap": cap,
             "promedios_organizacion_360": promedio_competencias_360,
             "items_360": _items_360_colaborador(
-                grupos_360.get(nombre, pd.DataFrame()),
+                grupo_360,
                 res_360["df_items"],
             ),
             "competencias_potencial": sorted(
