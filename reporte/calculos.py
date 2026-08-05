@@ -131,6 +131,44 @@ def filtrar_excluidos_desempeno(df: pd.DataFrame) -> pd.DataFrame:
     return df.loc[~mascara].copy()
 
 
+def seleccionar_competencias_resumen(
+    df_competencias: pd.DataFrame,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Divide fortalezas y oportunidades sin repetir competencias.
+
+    Con menos de ocho competencias reparte el universo completo entre ambos
+    lados (el lado de fortalezas recibe una adicional cuando el total es
+    impar). Con ocho o más conserva el máximo visual de cuatro por lado.
+    """
+    if df_competencias.empty:
+        vacio = df_competencias.copy()
+        return vacio, vacio
+
+    ordenadas = (
+        df_competencias
+        .drop_duplicates(subset=["competencia"])
+        .sort_values("prom_comp", ascending=False)
+        .reset_index(drop=True)
+    )
+    total = len(ordenadas)
+    if total < 8:
+        cantidad_top = (total + 1) // 2
+        cantidad_fortalecer = total // 2
+    else:
+        cantidad_top = 4
+        cantidad_fortalecer = 4
+
+    top = ordenadas.head(cantidad_top).copy()
+    fortalecer = (
+        ordenadas.tail(cantidad_fortalecer)
+        .sort_values("prom_comp", ascending=True)
+        .copy()
+        if cantidad_fortalecer
+        else ordenadas.iloc[0:0].copy()
+    )
+    return top, fortalecer
+
+
 def calcular_pesos_redistribuidos(tipos_presentes: list, weights: dict | None = None) -> dict:
     """
     Redistribuye el peso de tipos faltantes en partes iguales entre los presentes.

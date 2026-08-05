@@ -273,7 +273,9 @@ html, body, [class*="css"] {
 
 /* Ocultar elementos de Streamlit */
 #MainMenu, footer, header { visibility: hidden; }
-.block-container { padding-top: 1rem; padding-bottom: 1rem; }
+/* Espacio de seguridad para que los distintivos flotantes de Community Cloud
+   no cubran los últimos valores o filas del dashboard. */
+.block-container { padding-top: 1rem; padding-bottom: 5rem; }
 
 /* Contenedor de filtros globales */
 .ev-filter-container {
@@ -3433,10 +3435,12 @@ if fase_activa == "fase1":
             st.plotly_chart(fig_relaciones(rel_prom_f), use_container_width=True, key="res_relaciones")
 
         col_c, col_d = st.columns(2)
-        comp_sorted = df_comp_prom_f.sort_values("prom_comp", ascending=False)
+        comp_top, comp_fortalecer = motor_360.seleccionar_competencias_resumen(
+            df_comp_prom_f
+        )
         with col_c:
             st.markdown("**Top competencias**")
-            for _, row in comp_sorted.head(4).iterrows():
+            for _, row in comp_top.iterrows():
                 v = row["prom_comp"]
                 pct = int((v - 65) / 35 * 100)
                 color = score_color(v)
@@ -3451,7 +3455,7 @@ if fase_activa == "fase1":
                 </div>""", unsafe_allow_html=True)
         with col_d:
             st.markdown("**Competencias a fortalecer**")
-            for _, row in comp_sorted.tail(4).sort_values("prom_comp").iterrows():
+            for _, row in comp_fortalecer.iterrows():
                 v = row["prom_comp"]
                 pct = int((v - 65) / 35 * 100)
                 color = score_color(v)
