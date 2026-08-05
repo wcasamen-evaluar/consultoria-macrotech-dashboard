@@ -13,6 +13,16 @@ class ResultadoIntegradoGraficosTest(unittest.TestCase):
         self.assertIn('fig.data[0].title.text = ""', self.contenido)
         self.assertIn('fig.data[0].number.valueformat = ".2f"', self.contenido)
 
+    def test_kpi_promedio_integrado_muestra_dos_decimales(self):
+        self.assertIn(
+            '<div class="kpi-value gradient">{promedio:.2f}</div>',
+            self.contenido,
+        )
+        self.assertNotIn(
+            '<div class="kpi-value gradient">{promedio:.0f}</div>',
+            self.contenido,
+        )
+
     def test_resultado_por_grupo_no_muestra_bandas_de_fondo(self):
         self.assertIn(
             "mostrar_bandas=False,",

@@ -2892,7 +2892,7 @@ def render_resultado_integrado_tipo(
         st.markdown(f"""
         <div class="kpi-card">
             <div class="kpi-label">{config['promedio']}</div>
-            <div class="kpi-value gradient">{promedio:.0f}</div>
+            <div class="kpi-value gradient">{promedio:.2f}</div>
             <div class="kpi-sub">{config['sub']}</div>
         </div>""", unsafe_allow_html=True)
     with kpi_i2:
