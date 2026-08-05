@@ -329,10 +329,22 @@ def clasificar_ninebox(df_ninebox: pd.DataFrame) -> pd.DataFrame:
         return df
 
     cortes = {
-        "potencial_sup": df_ninebox["potencial"].mean() + df_ninebox["potencial"].std(ddof=1),
-        "potencial_inf": df_ninebox["potencial"].mean() - df_ninebox["potencial"].std(ddof=1),
-        "desempeno_sup": df_ninebox["desempeno_360"].mean() + df_ninebox["desempeno_360"].std(ddof=1),
-        "desempeno_inf": df_ninebox["desempeno_360"].mean() - df_ninebox["desempeno_360"].std(ddof=1),
+        "potencial_sup": motor_360.redondear_corte_ninebox(
+            df_ninebox["potencial"].mean()
+            + df_ninebox["potencial"].std(ddof=1)
+        ),
+        "potencial_inf": motor_360.redondear_corte_ninebox(
+            df_ninebox["potencial"].mean()
+            - df_ninebox["potencial"].std(ddof=1)
+        ),
+        "desempeno_sup": motor_360.redondear_corte_ninebox(
+            df_ninebox["desempeno_360"].mean()
+            + df_ninebox["desempeno_360"].std(ddof=1)
+        ),
+        "desempeno_inf": motor_360.redondear_corte_ninebox(
+            df_ninebox["desempeno_360"].mean()
+            - df_ninebox["desempeno_360"].std(ddof=1)
+        ),
     }
 
     def nivel(valor: float, inferior: float, superior: float) -> str:

@@ -2,6 +2,9 @@ import ast
 import unittest
 from pathlib import Path
 
+import pandas as pd
+
+from reporte import calculos
 from reporte import integrado
 
 
@@ -76,6 +79,40 @@ class NineboxLabelsTest(unittest.TestCase):
                 break
 
         self.assertEqual(colores_dashboard, esperados)
+
+    def test_cortes_ninebox_redondean_al_entero_con_half_up(self):
+        self.assertEqual(calculos.redondear_corte_ninebox(98.8), 99)
+        self.assertEqual(calculos.redondear_corte_ninebox(98.5), 99)
+        self.assertEqual(calculos.redondear_corte_ninebox(97.9), 98)
+
+    def test_puntaje_inferior_al_corte_entero_no_es_super_estrella(self):
+        datos = pd.DataFrame(
+            {
+                "colaborador": ["Persona A", "Persona B"],
+                "match_nombre": ["persona a", "persona b"],
+                "potencial": [100.0, 99.0],
+                "desempeno_360": [98.9, 98.7],
+            }
+        )
+
+        resultado = integrado.clasificar_ninebox(datos).set_index("colaborador")
+
+        self.assertEqual(resultado.loc["Persona A", "nivel_potencial"], "alto")
+        self.assertNotEqual(resultado.loc["Persona A", "nivel_desempeno"], "alto")
+        self.assertNotEqual(resultado.loc["Persona A", "cuadrante"], 1)
+        self.assertNotEqual(
+            resultado.loc["Persona A", "cuadrante_nombre"],
+            "Super Estrella",
+        )
+
+    def test_dashboard_muestra_los_rangos_sin_decimales(self):
+        ruta = Path(__file__).resolve().parents[1] / "dashboard_360.py"
+        contenido = ruta.read_text(encoding="utf-8-sig")
+
+        self.assertIn("cortes['potencial_sup']:.0f", contenido)
+        self.assertIn("cortes['potencial_inf']:.0f", contenido)
+        self.assertIn("cortes['desempeno_sup']:.0f", contenido)
+        self.assertIn("cortes['desempeno_inf']:.0f", contenido)
 
 
 if __name__ == "__main__":

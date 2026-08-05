@@ -1552,12 +1552,20 @@ def cortes_ninebox(df_ninebox: pd.DataFrame) -> dict:
     return {
         "potencial_prom": potencial_prom,
         "potencial_std": potencial_std,
-        "potencial_sup": potencial_prom + potencial_std,
-        "potencial_inf": potencial_prom - potencial_std,
+        "potencial_sup": motor_360.redondear_corte_ninebox(
+            potencial_prom + potencial_std
+        ),
+        "potencial_inf": motor_360.redondear_corte_ninebox(
+            potencial_prom - potencial_std
+        ),
         "desempeno_prom": desempeno_prom,
         "desempeno_std": desempeno_std,
-        "desempeno_sup": desempeno_prom + desempeno_std,
-        "desempeno_inf": desempeno_prom - desempeno_std,
+        "desempeno_sup": motor_360.redondear_corte_ninebox(
+            desempeno_prom + desempeno_std
+        ),
+        "desempeno_inf": motor_360.redondear_corte_ninebox(
+            desempeno_prom - desempeno_std
+        ),
     }
 
 
@@ -4457,12 +4465,12 @@ if fase_activa == "ninebox":
             cortes_html += (
                 "<tr><td style='font-weight:700'>Potencial</td>"
                 f"<td>{cortes['potencial_prom']:.1f}</td><td>{cortes['potencial_std']:.1f}</td>"
-                f"<td>{cortes['potencial_sup']:.1f}</td><td>{cortes['potencial_inf']:.1f}</td></tr>"
+                f"<td>{cortes['potencial_sup']:.0f}</td><td>{cortes['potencial_inf']:.0f}</td></tr>"
             )
             cortes_html += (
                 "<tr><td style='font-weight:700'>Evd 360</td>"
                 f"<td>{cortes['desempeno_prom']:.1f}</td><td>{cortes['desempeno_std']:.1f}</td>"
-                f"<td>{cortes['desempeno_sup']:.1f}</td><td>{cortes['desempeno_inf']:.1f}</td></tr>"
+                f"<td>{cortes['desempeno_sup']:.0f}</td><td>{cortes['desempeno_inf']:.0f}</td></tr>"
             )
             cortes_html += "</tbody></table></div>"
             st.markdown(cortes_html, unsafe_allow_html=True)

@@ -9,6 +9,7 @@ Lo usan:
 """
 
 from pathlib import Path
+import math
 import re
 import unicodedata
 
@@ -98,6 +99,11 @@ def clasificar(puntaje: float) -> dict:
         if lo <= puntaje < hi:
             return {"etiqueta": etiqueta, "color": color}
     return {"etiqueta": "Sin clasificación", "color": "#6B7280"}
+
+
+def redondear_corte_ninebox(valor: float) -> int:
+    """Redondea un punto de corte positivo al entero más cercano (half-up)."""
+    return int(math.floor(float(valor) + 0.5))
 
 
 def limpiar_nombre_competencia(nombre: str) -> str:
