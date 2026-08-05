@@ -329,7 +329,7 @@ def clasificar_ninebox(df_ninebox: pd.DataFrame) -> pd.DataFrame:
         return df
 
     cortes = {
-        "potencial_sup": motor_360.redondear_corte_ninebox(
+        "potencial_sup": motor_360.corte_superior_ninebox(
             df_ninebox["potencial"].mean()
             + df_ninebox["potencial"].std(ddof=1)
         ),
@@ -337,7 +337,7 @@ def clasificar_ninebox(df_ninebox: pd.DataFrame) -> pd.DataFrame:
             df_ninebox["potencial"].mean()
             - df_ninebox["potencial"].std(ddof=1)
         ),
-        "desempeno_sup": motor_360.redondear_corte_ninebox(
+        "desempeno_sup": motor_360.corte_superior_ninebox(
             df_ninebox["desempeno_360"].mean()
             + df_ninebox["desempeno_360"].std(ddof=1)
         ),

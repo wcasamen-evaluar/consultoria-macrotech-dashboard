@@ -106,6 +106,16 @@ def redondear_corte_ninebox(valor: float) -> int:
     return int(math.floor(float(valor) + 0.5))
 
 
+def corte_superior_ninebox(valor: float) -> int:
+    """Define el inicio entero del nivel alto del Ninebox.
+
+    En la escala 0-100 usada por Macrotech, el nivel alto comienza en 99.
+    Los puntajes individuales conservan sus decimales, por lo que 98.9 sigue
+    perteneciendo al nivel medio.
+    """
+    return min(100, max(99, redondear_corte_ninebox(valor)))
+
+
 def limpiar_nombre_competencia(nombre: str) -> str:
     """Elimina prefijos numericos como '2.1 ' del nombre de competencia."""
     return re.sub(r"^\d+(\.\d+)?\s+", "", str(nombre).strip())

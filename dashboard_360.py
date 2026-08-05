@@ -1552,7 +1552,7 @@ def cortes_ninebox(df_ninebox: pd.DataFrame) -> dict:
     return {
         "potencial_prom": potencial_prom,
         "potencial_std": potencial_std,
-        "potencial_sup": motor_360.redondear_corte_ninebox(
+        "potencial_sup": motor_360.corte_superior_ninebox(
             potencial_prom + potencial_std
         ),
         "potencial_inf": motor_360.redondear_corte_ninebox(
@@ -1560,7 +1560,7 @@ def cortes_ninebox(df_ninebox: pd.DataFrame) -> dict:
         ),
         "desempeno_prom": desempeno_prom,
         "desempeno_std": desempeno_std,
-        "desempeno_sup": motor_360.redondear_corte_ninebox(
+        "desempeno_sup": motor_360.corte_superior_ninebox(
             desempeno_prom + desempeno_std
         ),
         "desempeno_inf": motor_360.redondear_corte_ninebox(

@@ -85,6 +85,11 @@ class NineboxLabelsTest(unittest.TestCase):
         self.assertEqual(calculos.redondear_corte_ninebox(98.5), 99)
         self.assertEqual(calculos.redondear_corte_ninebox(97.9), 98)
 
+    def test_el_nivel_alto_del_ninebox_comienza_en_99(self):
+        self.assertEqual(calculos.corte_superior_ninebox(97.8), 99)
+        self.assertEqual(calculos.corte_superior_ninebox(98.8), 99)
+        self.assertEqual(calculos.corte_superior_ninebox(99.6), 100)
+
     def test_puntaje_inferior_al_corte_entero_no_es_super_estrella(self):
         datos = pd.DataFrame(
             {
@@ -99,6 +104,26 @@ class NineboxLabelsTest(unittest.TestCase):
 
         self.assertEqual(resultado.loc["Persona A", "nivel_potencial"], "alto")
         self.assertNotEqual(resultado.loc["Persona A", "nivel_desempeno"], "alto")
+        self.assertNotEqual(resultado.loc["Persona A", "cuadrante"], 1)
+        self.assertNotEqual(
+            resultado.loc["Persona A", "cuadrante_nombre"],
+            "Super Estrella",
+        )
+
+    def test_potencial_98_9_permanece_en_el_nivel_medio(self):
+        datos = pd.DataFrame(
+            {
+                "colaborador": ["Persona A", "Persona B", "Persona C"],
+                "match_nombre": ["persona a", "persona b", "persona c"],
+                "potencial": [98.9, 97.0, 100.0],
+                "desempeno_360": [100.0, 90.0, 100.0],
+            }
+        )
+
+        resultado = integrado.clasificar_ninebox(datos).set_index("colaborador")
+
+        self.assertEqual(resultado.loc["Persona A", "potencial"], 98.9)
+        self.assertEqual(resultado.loc["Persona A", "nivel_potencial"], "medio")
         self.assertNotEqual(resultado.loc["Persona A", "cuadrante"], 1)
         self.assertNotEqual(
             resultado.loc["Persona A", "cuadrante_nombre"],
