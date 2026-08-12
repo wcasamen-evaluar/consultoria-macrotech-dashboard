@@ -1600,6 +1600,19 @@ def clasificar_ninebox(df_ninebox: pd.DataFrame, cortes: dict) -> pd.DataFrame:
     return df
 
 
+def filtrar_ninebox_general(
+    df_clasificado_general: pd.DataFrame,
+    df_ninebox_visible: pd.DataFrame,
+) -> pd.DataFrame:
+    """Filtra personas sin modificar su cuadrante calculado en el universo general."""
+    if df_clasificado_general.empty or df_ninebox_visible.empty:
+        return df_clasificado_general.iloc[0:0].copy()
+    llaves_visibles = set(df_ninebox_visible["match_key"].dropna())
+    return df_clasificado_general[
+        df_clasificado_general["match_key"].isin(llaves_visibles)
+    ].copy()
+
+
 def matriz_ninebox(df_clasificado: pd.DataFrame) -> pd.DataFrame:
     filas = ["alto", "medio", "bajo"]
     columnas = ["bajo", "medio", "alto"]
@@ -3031,6 +3044,24 @@ except Exception as exc:
 
 indice_global = construir_indice_colaboradores(res, res_potencial, res_objetivos)
 
+# El Ninebox se clasifica siempre con el universo general, antes de aplicar
+# cualquier filtro global. Los filtros posteriores solo reducen las personas
+# visibles y nunca recalculan cortes ni cuadrantes.
+df_ninebox_general = preparar_ninebox(
+    res["df_global"],
+    res_potencial["df_personas"],
+)
+cortes_ninebox_general = (
+    cortes_ninebox(df_ninebox_general)
+    if len(df_ninebox_general) >= 2
+    else None
+)
+df_ninebox_clasificado_general = (
+    clasificar_ninebox(df_ninebox_general, cortes_ninebox_general)
+    if cortes_ninebox_general is not None
+    else df_ninebox_general.copy()
+)
+
 FILTROS_GLOBALES_KEYS = [
     "filtro_global_empresa",
     "filtro_global_cargo",
@@ -4401,18 +4432,25 @@ if fase_activa == "res_int":
 # NINEBOX
 if fase_activa == "ninebox":
     st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
-    df_ninebox_base = preparar_ninebox(res["df_global"], res_potencial["df_personas"])
+    df_ninebox_visible = preparar_ninebox(
+        res["df_global"],
+        res_potencial["df_personas"],
+    )
+    df_ninebox_base = filtrar_ninebox_general(
+        df_ninebox_clasificado_general,
+        df_ninebox_visible,
+    )
 
-    if df_ninebox_base.empty:
+    if df_ninebox_general.empty:
         st.info("No hay colaboradores con datos emparejados de desempeño 360 y potencial.")
+    elif cortes_ninebox_general is None:
+        st.info("Se requieren al menos dos colaboradores emparejados para calcular los puntos de corte del ninebox.")
+    elif df_ninebox_base.empty:
+        st.info("No hay colaboradores con desempeño y potencial para los filtros globales seleccionados.")
     else:
         nombres_ninebox = sorted(df_ninebox_base["colaborador"].dropna().unique().tolist())
-        if len(df_ninebox_base) < 2:
-            st.info("Se requieren al menos dos colaboradores emparejados para calcular los puntos de corte del ninebox.")
-            st.stop()
-
-        cortes = cortes_ninebox(df_ninebox_base)
-        df_ninebox_clasificado_base = clasificar_ninebox(df_ninebox_base, cortes)
+        cortes = cortes_ninebox_general
+        df_ninebox_clasificado_base = df_ninebox_base
         seleccion_ninebox = st.session_state.get("filtro_ninebox_colaboradores", [])
         df_ninebox_kpi = df_ninebox_clasificado_base.copy()
         if seleccion_ninebox:

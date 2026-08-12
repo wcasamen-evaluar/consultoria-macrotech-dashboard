@@ -9,6 +9,23 @@ from reporte import integrado
 
 
 class NineboxLabelsTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        ruta = Path(__file__).resolve().parents[1] / "dashboard_360.py"
+        arbol = ast.parse(ruta.read_text(encoding="utf-8-sig"))
+        funciones = [
+            nodo
+            for nodo in arbol.body
+            if isinstance(nodo, (ast.FunctionDef, ast.AsyncFunctionDef))
+            and nodo.name == "filtrar_ninebox_general"
+        ]
+        modulo = ast.Module(body=funciones, type_ignores=[])
+        espacio = {"pd": pd}
+        exec(compile(modulo, str(ruta), "exec"), espacio)
+        cls.filtrar_ninebox_general = staticmethod(
+            espacio["filtrar_ninebox_general"]
+        )
+
     def test_los_nombres_corresponden_a_las_nueve_posiciones(self):
         esperados = {
             1: "Super Estrella",
@@ -114,7 +131,11 @@ class NineboxLabelsTest(unittest.TestCase):
         datos = pd.DataFrame(
             {
                 "colaborador": ["Persona A", "Persona B", "Persona C"],
-                "match_nombre": ["persona a", "persona b", "persona c"],
+                "match_key": [
+                    "email:persona.a@example.com",
+                    "email:persona.b@example.com",
+                    "email:persona.c@example.com",
+                ],
                 "potencial": [98.9, 97.0, 100.0],
                 "desempeno_360": [100.0, 90.0, 100.0],
             }
@@ -138,6 +159,59 @@ class NineboxLabelsTest(unittest.TestCase):
         self.assertIn("cortes['potencial_inf']:.0f", contenido)
         self.assertIn("cortes['desempeno_sup']:.0f", contenido)
         self.assertIn("cortes['desempeno_inf']:.0f", contenido)
+
+    def test_un_filtro_no_recalcula_el_cuadrante_general(self):
+        clasificado_general = pd.DataFrame(
+            {
+                "colaborador": ["Persona A", "Persona B", "Persona C"],
+                "match_key": [
+                    "email:persona.a@example.com",
+                    "email:persona.b@example.com",
+                    "email:persona.c@example.com",
+                ],
+                "potencial": [99.0, 85.0, 70.0],
+                "desempeno_360": [99.0, 85.0, 70.0],
+                "nivel_potencial": ["alto", "medio", "bajo"],
+                "nivel_desempeno": ["alto", "medio", "bajo"],
+                "cuadrante": [1, 5, 9],
+                "cuadrante_nombre": [
+                    "Super Estrella",
+                    "Colaborador clave",
+                    "Bajo rendimiento",
+                ],
+            }
+        )
+        visibles = pd.DataFrame(
+            {
+                "colaborador": ["Persona B"],
+                "match_key": ["email:persona.b@example.com"],
+                "potencial": [85.0],
+                "desempeno_360": [85.0],
+            }
+        )
+
+        resultado = self.filtrar_ninebox_general(
+            clasificado_general,
+            visibles,
+        )
+
+        self.assertEqual(len(resultado), 1)
+        self.assertEqual(resultado.iloc[0]["colaborador"], "Persona B")
+        self.assertEqual(resultado.iloc[0]["cuadrante"], 5)
+        self.assertEqual(
+            resultado.iloc[0]["cuadrante_nombre"],
+            "Colaborador clave",
+        )
+
+    def test_dashboard_calcula_el_ninebox_general_antes_de_los_filtros(self):
+        ruta = Path(__file__).resolve().parents[1] / "dashboard_360.py"
+        contenido = ruta.read_text(encoding="utf-8-sig")
+
+        posicion_general = contenido.index("df_ninebox_general = preparar_ninebox")
+        posicion_filtros = contenido.index("if hay_filtros_globales:")
+        self.assertLess(posicion_general, posicion_filtros)
+        self.assertIn("cortes = cortes_ninebox_general", contenido)
+        self.assertNotIn("cortes = cortes_ninebox(df_ninebox_base)", contenido)
 
 
 if __name__ == "__main__":
